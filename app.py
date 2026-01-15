@@ -3,36 +3,52 @@ import os
 import uuid
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey123'  # ضروري لـ flash
+app.secret_key = "UPLOAD_MANAGER_SECRET"
 
-# مكان حفظ الملفات المرفوعة
-UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+# 🔐 باسورد الحذف (غيره كما تريد)
+DELETE_PASSWORD = "123456"
+
+UPLOAD_FOLDER = os.path.join(app.root_path, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# صفحة البداية + رفع الملفات
-@app.route('/', methods=['GET', 'POST'])
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    download_link = None
-    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
-    uploaded_files.sort(reverse=True)  # عرض أحدث الملفات أولاً
-
-    if request.method == 'POST':
-        file = request.files.get('file')
+    if request.method == "POST":
+        file = request.files.get("file")
         if file:
-            # إعطاء الملف اسم فريد لتجنب الكتابة على الملفات السابقة
-            unique_filename = str(uuid.uuid4()) + "_" + file.filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(file_path)
-            flash(f"تم رفع الملف بنجاح: {file.filename}")
-            return redirect(url_for('index'))  # إعادة تحميل الصفحة لتحديث القائمة
+            filename = f"{uuid.uuid4()}_{file.filename}"
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            flash("✅ تم رفع البرنامج بنجاح")
+        return redirect(url_for("index"))
 
-    return render_template('index.html', files=uploaded_files)
+    files = sorted(os.listdir(app.config["UPLOAD_FOLDER"]), reverse=True)
+    return render_template("index.html", files=files)
 
-# رابط التحميل
-@app.route('/uploads/<filename>')
+
+@app.route("/download/<filename>")
 def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
 
-if __name__ == '__main__':
+
+@app.route("/delete/<filename>", methods=["POST"])
+def delete_file(filename):
+    password = request.form.get("password")
+
+    if password != DELETE_PASSWORD:
+        flash("❌ كلمة المرور غير صحيحة")
+        return redirect(url_for("index"))
+
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        flash("🗑️ تم حذف البرنامج بنجاح")
+    else:
+        flash("⚠️ الملف غير موجود")
+
+    return redirect(url_for("index"))
+
+
+if __name__ == "__main__":
     app.run(debug=True)
