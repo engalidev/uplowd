@@ -1,44 +1,68 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>رفع وتحميل البرامج</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 30px auto; }
-        h1 { color: #333; }
-        form { margin-bottom: 20px; }
-        input[type="file"] { margin-right: 10px; }
-        button { padding: 5px 10px; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 5px; }
-        a { text-decoration: none; color: #007BFF; }
-        a:hover { text-decoration: underline; }
-        .flash { background: #D4EDDA; padding: 10px; border-radius: 5px; margin-bottom: 20px; color: #155724; }
-    </style>
+<meta charset="UTF-8">
+<title>إدارة البرامج</title>
+<style>
+body { font-family: Arial; max-width: 900px; margin: auto; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
+button { padding: 5px 10px; cursor: pointer; }
+.delete { color: red; background: none; border: none; }
+.flash { background: #e8ffe8; padding: 10px; margin-top: 10px; }
+</style>
+
+<script>
+function askPassword(form) {
+    const pass = prompt("🔐 أدخل كلمة مرور الحذف:");
+    if (!pass) return false;
+    form.password.value = pass;
+    return true;
+}
+</script>
 </head>
+
 <body>
-    <h1>رفع البرنامج</h1>
 
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        {% for message in messages %}
-          <div class="flash">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+<h1>📦 إدارة البرامج</h1>
 
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".exe" required>
-        <button type="submit">رفع</button>
-    </form>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  {% for msg in messages %}
+    <div class="flash">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
 
-    <h2>الملفات المرفوعة:</h2>
-    <ul>
-        {% for file in files %}
-            <li>
-                <a href="{{ url_for('download_file', filename=file) }}" download>{{ file.split('_', 1)[1] }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".exe" required>
+    <button type="submit">⬆️ رفع برنامج</button>
+</form>
+
+<table>
+<tr>
+    <th>اسم البرنامج</th>
+    <th>تحميل</th>
+    <th>حذف</th>
+</tr>
+
+{% for file in files %}
+<tr>
+    <td>{{ file.split('_',1)[1] }}</td>
+    <td>
+        <a href="{{ url_for('download_file', filename=file) }}">تحميل</a>
+    </td>
+    <td>
+        <form method="POST"
+              action="{{ url_for('delete_file', filename=file) }}"
+              onsubmit="return askPassword(this);">
+            <input type="hidden" name="password">
+            <button class="delete">🗑️ حذف</button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+</table>
+
 </body>
 </html>
