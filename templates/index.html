@@ -1,12 +1,19 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>My App</title>
+    <title>رفع وتحميل البرنامج</title>
 </head>
 <body>
-    <h1>مرحبا بك في Uplowd!</h1>
-    <p>هذه صفحة HTML تجريبية.</p>
+    <h1>رفع البرنامج</h1>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".exe" required>
+        <button type="submit">رفع</button>
+    </form>
+
+    {% if download_link %}
+    <h2>رابط التحميل:</h2>
+    <a href="{{ download_link }}" download>اضغط هنا لتحميل الملف المرفوع</a>
+    {% endif %}
 </body>
 </html>
