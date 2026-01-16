@@ -48,7 +48,22 @@ def delete_file(filename):
         flash("⚠️ الملف غير موجود")
 
     return redirect(url_for("index"))
+    
+@app.route("/latest_version")
+def latest_version():
+    files = sorted(os.listdir(app.config["UPLOAD_FOLDER"]), reverse=True)
+    if not files:
+        return json.dumps({"latest_version": "1.0.0", "download_url": ""})
+    
+    latest_file = files[0]  # آخر نسخة مرفوعة
+    version = latest_file.split("_")[-1].replace(".exe", "")  # مثلا لو الملف باسم unique_hash_v1.2.3.exe
 
+    download_url = url_for("download_file", filename=latest_file, _external=True)
+
+    return json.dumps({
+        "latest_version": version,
+        "download_url": download_url
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
