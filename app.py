@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 import os
 import uuid
-
+from packaging import version
 app = Flask(__name__)
 app.secret_key = "UPLOAD_MANAGER_SECRET"
 
@@ -49,19 +49,31 @@ def delete_file(filename):
 
     return redirect(url_for("index"))
     
-@app.route("/latest_version")
-def latest_version():
-    files = sorted(os.listdir(app.config["UPLOAD_FOLDER"]), reverse=True)
-    if not files:
-        return json.dumps({"latest_version": "1.0.0", "download_url": ""})
-    
-    latest_file = files[0]  # آخر نسخة مرفوعة
-    version = latest_file.split("_")[-1].replace(".exe", "")  # مثلا لو الملف باسم unique_hash_v1.2.3.exe
+@app.route("/latest_version/<program_name>")
+def latest_version(program_name):
+    program_folder = os.path.join(app.config["UPLOAD_FOLDER"], program_name)
+    if not os.path.exists(program_folder):
+        return json.dumps({"latest_version": "0.0.0", "download_url": ""})
 
-    download_url = url_for("download_file", filename=latest_file, _external=True)
+    files = os.listdir(program_folder)
+    pattern = r"_v(\d+\.\d+\.\d+)\.exe$"
+    latest_ver = "0.0.0"
+    latest_file = None
 
+    for f in files:
+        match = re.search(pattern, f)
+        if match:
+            ver = match.group(1)
+            if version.parse(ver) > version.parse(latest_ver):
+                latest_ver = ver
+                latest_file = f
+
+    if not latest_file:
+        return json.dumps({"latest_version": "0.0.0", "download_url": ""})
+
+    download_url = url_for("download_file", filename=f"{program_name}/{latest_file}", _external=True)
     return json.dumps({
-        "latest_version": version,
+        "latest_version": latest_ver,
         "download_url": download_url
     })
 
