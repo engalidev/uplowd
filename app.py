@@ -51,17 +51,22 @@ def delete_file(filename):
     
 @app.route("/latest_version/<program_name>")
 def latest_version(program_name):
+    """
+    إرجاع أحدث نسخة للبرنامج المحدد مع رابط التحميل
+    يدعم الملفات: .exe, .setup, .msi
+    """
     program_folder = os.path.join(app.config["UPLOAD_FOLDER"], program_name)
     if not os.path.exists(program_folder):
         return json.dumps({"latest_version": "0.0.0", "download_url": ""})
 
     files = os.listdir(program_folder)
-    pattern = r"_v(\d+\.\d+\.\d+)\.exe$"
+    # نمط يبحث عن _v1.2.3.exe أو .setup أو .msi
+    pattern = r"_v(\d+\.\d+\.\d+)\.(exe|setup|msi)$"
     latest_ver = "0.0.0"
     latest_file = None
 
     for f in files:
-        match = re.search(pattern, f)
+        match = re.search(pattern, f, re.IGNORECASE)
         if match:
             ver = match.group(1)
             if version.parse(ver) > version.parse(latest_ver):
@@ -71,7 +76,9 @@ def latest_version(program_name):
     if not latest_file:
         return json.dumps({"latest_version": "0.0.0", "download_url": ""})
 
-    download_url = url_for("download_file", filename=f"{program_name}/{latest_file}", _external=True)
+    download_url = url_for(
+        "download_file", filename=f"{program_name}/{latest_file}", _external=True
+    )
     return json.dumps({
         "latest_version": latest_ver,
         "download_url": download_url
