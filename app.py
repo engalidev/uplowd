@@ -16,16 +16,29 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
+        program_name = request.form.get("program_name", "unnamed_program")
+        program_folder = os.path.join(app.config["UPLOAD_FOLDER"], program_name)
+        os.makedirs(program_folder, exist_ok=True)
+
         file = request.files.get("file")
-        if file:
-            filename = f"{uuid.uuid4()}_{file.filename}"
-            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            flash("✅ تم رفع البرنامج بنجاح")
+        if file and file.filename:
+            if file.filename.lower().endswith((".exe", ".setup", ".msi", ".zip", ".rar")):
+                filename = f"{uuid.uuid4()}_{file.filename}"
+                file.save(os.path.join(program_folder, filename))
+                flash(f"✅ تم رفع {file.filename} بنجاح")
+            else:
+                flash("⚠️ امتداد الملف غير مدعوم")
         return redirect(url_for("index"))
 
-    files = sorted(os.listdir(app.config["UPLOAD_FOLDER"]), reverse=True)
-    return render_template("index.html", files=files)
+    # عرض الملفات حسب البرامج
+    programs = {}
+    for prog in sorted(os.listdir(app.config["UPLOAD_FOLDER"]), reverse=True):
+        prog_path = os.path.join(app.config["UPLOAD_FOLDER"], prog)
+        if os.path.isdir(prog_path):
+            files = sorted(os.listdir(prog_path), reverse=True)
+            programs[prog] = files
 
+    return render_template("index.html", programs=programs)
 
 @app.route("/download/<filename>")
 def download_file(filename):
