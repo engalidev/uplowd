@@ -40,9 +40,14 @@ def index():
 
     return render_template("index.html", programs=programs)
 
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
+@app.route("/download/<program>/<filename>")
+def download_file(program, filename):
+    return send_from_directory(
+        os.path.join(app.config["UPLOAD_FOLDER"], program),
+        filename,
+        as_attachment=True
+    )
+
 
 
 @app.route("/delete/<filename>", methods=["POST"])
