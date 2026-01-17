@@ -53,15 +53,15 @@ def delete_file(filename):
 def latest_version(program_name):
     """
     إرجاع أحدث نسخة للبرنامج المحدد مع رابط التحميل
-    يدعم الملفات: .exe, .setup, .msi
+    يدعم الملفات: .exe, .setup, .msi, .zip, .rar
     """
     program_folder = os.path.join(app.config["UPLOAD_FOLDER"], program_name)
     if not os.path.exists(program_folder):
         return json.dumps({"latest_version": "0.0.0", "download_url": ""})
 
     files = os.listdir(program_folder)
-    # نمط يبحث عن _v1.2.3.exe أو .setup أو .msi
-    pattern = r"_v(\d+\.\d+\.\d+)\.(exe|setup|msi)$"
+    # نمط يبحث عن _v1.2.3.لاحقة
+    pattern = r"_v(\d+\.\d+\.\d+)\.(exe|setup|msi|zip|rar)$"
     latest_ver = "0.0.0"
     latest_file = None
 
