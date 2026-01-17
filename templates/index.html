@@ -2,14 +2,63 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>إدارة البرامج</title>
+<title>EV SPAR - إدارة البرامج</title>
 <style>
-body { font-family: Arial; max-width: 900px; margin: auto; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
-button { padding: 5px 10px; cursor: pointer; }
-.delete { color: red; background: none; border: none; }
-.flash { background: #e8ffe8; padding: 10px; margin-top: 10px; }
+body {
+    font-family: "Segoe UI", Tahoma, Arial;
+    background: #f4f6f9;
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+input[type=file], input[type=text] {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+button:hover { background: #2980b9; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+th, td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+th { background: #3498db; color: white; }
+.delete { color: red; background: none; border: none; cursor: pointer; }
+.flash {
+    background: #dff0d8;
+    border: 1px solid #d0e9c6;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    text-align: center;
+}
 </style>
 
 <script>
@@ -23,8 +72,7 @@ function askPassword(form) {
 </head>
 
 <body>
-
-<h1>📦 إدارة البرامج</h1>
+<h1>📦 EV SPAR - إدارة البرامج</h1>
 
 {% with messages = get_flashed_messages() %}
 {% if messages %}
@@ -35,27 +83,25 @@ function askPassword(form) {
 {% endwith %}
 
 <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".exe" required>
-    <button type="submit">⬆️ رفع برنامج</button>
+    <input type="text" name="program_name" placeholder="اسم البرنامج" required>
+    <input type="file" name="file" accept=".exe,.setup,.msi,.zip,.rar" required>
+    <button type="submit">⬆️ رفع البرنامج/الملف المضغوط</button>
 </form>
 
+{% for program, files in programs.items() %}
+<h3>📂 {{ program }}</h3>
 <table>
 <tr>
-    <th>اسم البرنامج</th>
+    <th>الملف</th>
     <th>تحميل</th>
     <th>حذف</th>
 </tr>
-
 {% for file in files %}
 <tr>
     <td>{{ file.split('_',1)[1] }}</td>
+    <td><a href="{{ url_for('download_file', program=program, filename=file) }}">⬇️ تحميل</a></td>
     <td>
-        <a href="{{ url_for('download_file', filename=file) }}">تحميل</a>
-    </td>
-    <td>
-        <form method="POST"
-              action="{{ url_for('delete_file', filename=file) }}"
-              onsubmit="return askPassword(this);">
+        <form method="POST" action="{{ url_for('delete_file', program=program, filename=file) }}" onsubmit="return askPassword(this);">
             <input type="hidden" name="password">
             <button class="delete">🗑️ حذف</button>
         </form>
@@ -63,6 +109,7 @@ function askPassword(form) {
 </tr>
 {% endfor %}
 </table>
+{% endfor %}
 
 </body>
 </html>
