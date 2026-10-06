@@ -14,6 +14,7 @@ import json
 import uuid
 import hashlib
 from datetime import datetime, timezone
+
 from packaging import version
 from werkzeug.utils import secure_filename
 
@@ -23,10 +24,12 @@ from werkzeug.utils import secure_filename
 # ============================================================
 
 app = Flask(__name__)
+
 app.secret_key = os.environ.get(
     "FLASK_SECRET_KEY",
     "UPLOAD_MANAGER_SECRET"
 )
+
 
 # ============================================================
 # Settings
@@ -42,13 +45,32 @@ UPLOAD_FOLDER = os.path.join(
     "uploads"
 )
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(
+    UPLOAD_FOLDER,
+    exist_ok=True
+)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 # ============================================================
-# Allowed files
+# Devspark Update Server
+# ============================================================
+
+# مهم:
+# نستخدم HTTPS بشكل صريح لأن DevsparkUpdateService
+# يرفض أي PackageUrl لا يستخدم HTTPS.
+PUBLIC_BASE_URL = os.environ.get(
+    "PUBLIC_BASE_URL",
+    "https://uplowd-production.up.railway.app"
+).rstrip("/")
+
+
+DEFAULT_PROGRAM = "Devspark"
+
+
+# ============================================================
+# Allowed Files
 # ============================================================
 
 ALLOWED_EXTENSIONS = {
@@ -68,7 +90,9 @@ def allowed_file(filename):
     if not filename:
         return False
 
-    _, ext = os.path.splitext(filename.lower())
+    _, ext = os.path.splitext(
+        filename.lower()
+    )
 
     return ext in ALLOWED_EXTENSIONS
 
@@ -80,9 +104,16 @@ def calculate_sha256(file_path):
 
     sha256 = hashlib.sha256()
 
-    with open(file_path, "rb") as f:
+    with open(
+        file_path,
+        "rb"
+    ) as f:
+
         while True:
-            chunk = f.read(1024 * 1024)
+
+            chunk = f.read(
+                1024 * 1024
+            )
 
             if not chunk:
                 break
@@ -93,21 +124,27 @@ def calculate_sha256(file_path):
 
 
 def get_file_size(file_path):
-    return os.path.getsize(file_path)
+    return os.path.getsize(
+        file_path
+    )
 
 
-def normalize_version(value, default="0.0.0"):
+def normalize_version(
+    value,
+    default="0.0.0"
+):
     """
-    تحويل الإصدار إلى صيغة آمنة مثل:
-    1
-    1.0
-    1.0.1
+    تحويل الإصدار إلى صيغة:
+    1.0.0
     """
 
-    if not value:
+    if value is None:
         return default
 
     value = str(value).strip()
+
+    if not value:
+        return default
 
     match = re.search(
         r"(\d+(?:\.\d+){0,3})",
@@ -122,57 +159,131 @@ def normalize_version(value, default="0.0.0"):
     while len(parts) < 3:
         parts.append("0")
 
-    return ".".join(parts[:3])
+    return ".".join(
+        parts[:3]
+    )
 
 
-def get_manifest_path(program_name="Devspark"):
+def parse_version(
+    value,
+    field_name="version"
+):
     """
-    مسار Manifest الخاص بالبرنامج.
+    قراءة إصدار والتحقق منه.
     """
+
+    normalized = normalize_version(
+        value,
+        default=""
+    )
+
+    if not normalized:
+        raise ValueError(
+            f"رقم الإصدار في {field_name} غير صالح."
+        )
+
+    try:
+        return version.parse(
+            normalized
+        )
+
+    except Exception:
+        raise ValueError(
+            f"رقم الإصدار في {field_name} غير صالح."
+        )
+
+
+def get_program_folder(
+    program_name=DEFAULT_PROGRAM
+):
+    """
+    الحصول على مجلد البرنامج.
+    """
+
+    program_name = secure_filename(
+        program_name
+    )
+
+    if not program_name:
+        program_name = DEFAULT_PROGRAM
 
     program_folder = os.path.join(
         app.config["UPLOAD_FOLDER"],
         program_name
     )
 
-    os.makedirs(program_folder, exist_ok=True)
+    os.makedirs(
+        program_folder,
+        exist_ok=True
+    )
+
+    return program_folder
+
+
+def get_manifest_path(
+    program_name=DEFAULT_PROGRAM
+):
+    """
+    مسار Manifest.
+    """
 
     return os.path.join(
-        program_folder,
+        get_program_folder(
+            program_name
+        ),
         "manifest.json"
     )
 
 
-def load_manifest(program_name="Devspark"):
+def load_manifest(
+    program_name=DEFAULT_PROGRAM
+):
     """
     قراءة Manifest الحالي.
     """
 
-    manifest_path = get_manifest_path(program_name)
+    manifest_path = get_manifest_path(
+        program_name
+    )
 
-    if not os.path.exists(manifest_path):
+    if not os.path.isfile(
+        manifest_path
+    ):
         return None
 
     try:
+
         with open(
             manifest_path,
             "r",
             encoding="utf-8"
         ) as f:
+
             return json.load(f)
 
     except Exception:
+
         return None
 
 
-def save_manifest(manifest, program_name="Devspark"):
+def save_manifest(
+    manifest,
+    program_name=DEFAULT_PROGRAM
+):
     """
-    حفظ Manifest.
+    حفظ Manifest بطريقة آمنة.
     """
 
-    manifest_path = get_manifest_path(program_name)
+    manifest_path = get_manifest_path(
+        program_name
+    )
 
-    temp_path = manifest_path + ".tmp"
+    temp_path = (
+        manifest_path +
+        "." +
+        uuid.uuid4().hex +
+        ".tmp"
+    )
 
     with open(
         temp_path,
@@ -187,35 +298,74 @@ def save_manifest(manifest, program_name="Devspark"):
             indent=2
         )
 
-    # استبدال الملف القديم بعد نجاح الكتابة
     os.replace(
         temp_path,
         manifest_path
     )
 
 
-def find_latest_zip(program_name):
+def build_download_url(
+    program_name,
+    filename
+):
     """
-    البحث عن أحدث ZIP اعتمادًا على رقم الإصدار.
+    إنشاء رابط تحميل HTTPS.
+
+    مهم جدًا:
+    DevsparkUpdateService يشترط HTTPS.
     """
 
-    program_folder = os.path.join(
-        app.config["UPLOAD_FOLDER"],
+    program_name = secure_filename(
         program_name
     )
 
-    if not os.path.isdir(program_folder):
-        return None, "0.0.0"
+    filename = os.path.basename(
+        filename
+    )
+
+    return (
+        f"{PUBLIC_BASE_URL}"
+        f"/download/"
+        f"{program_name}/"
+        f"{filename}"
+    )
+
+
+def find_latest_zip(
+    program_name
+):
+    """
+    البحث عن أحدث ZIP اعتمادًا على الإصدار.
+    """
+
+    program_folder = get_program_folder(
+        program_name
+    )
 
     latest_file = None
-    latest_version = version.parse("0.0.0")
+
+    latest_version = version.parse(
+        "0.0.0"
+    )
 
     pattern = re.compile(
-        r"(?:^|[-_])v?(\d+\.\d+\.\d+)(?:[-_.]|$)",
+        r"(?:^|[-_])v?"
+        r"(\d+\.\d+\.\d+)"
+        r"(?:[-_.]|$)",
         re.IGNORECASE
     )
 
-    for filename in os.listdir(program_folder):
+    try:
+
+        filenames = os.listdir(
+            program_folder
+        )
+
+    except Exception:
+
+        return None, "0.0.0"
+
+    for filename in filenames:
 
         if filename.lower() == "manifest.json":
             continue
@@ -223,35 +373,31 @@ def find_latest_zip(program_name):
         if not filename.lower().endswith(".zip"):
             continue
 
-        match = pattern.search(filename)
+        match = pattern.search(
+            filename
+        )
 
         if not match:
             continue
 
         try:
+
             current_version = version.parse(
                 match.group(1)
             )
+
         except Exception:
+
             continue
 
         if current_version > latest_version:
+
             latest_version = current_version
             latest_file = filename
 
-    return latest_file, str(latest_version)
-
-
-def build_download_url(program_name, filename):
-    """
-    إنشاء رابط تحميل صحيح.
-    """
-
-    return url_for(
-        "download_file",
-        program=program_name,
-        filename=filename,
-        _external=True
+    return (
+        latest_file,
+        str(latest_version)
     )
 
 
@@ -259,7 +405,10 @@ def build_download_url(program_name, filename):
 # Main Management Page
 # ============================================================
 
-@app.route("/", methods=["GET", "POST"])
+@app.route(
+    "/",
+    methods=["GET", "POST"]
+)
 def index():
 
     if request.method == "POST":
@@ -267,47 +416,55 @@ def index():
         program_name = (
             request.form.get(
                 "program_name",
-                "Devspark"
+                DEFAULT_PROGRAM
             ).strip()
         )
 
         if not program_name:
-            program_name = "Devspark"
+            program_name = DEFAULT_PROGRAM
 
-        program_name = secure_filename(program_name)
-
-        if not program_name:
-            program_name = "Devspark"
-
-        program_folder = os.path.join(
-            app.config["UPLOAD_FOLDER"],
+        program_name = secure_filename(
             program_name
         )
 
-        os.makedirs(
-            program_folder,
-            exist_ok=True
+        if not program_name:
+            program_name = DEFAULT_PROGRAM
+
+        program_folder = get_program_folder(
+            program_name
         )
 
-        file = request.files.get("file")
+        file = request.files.get(
+            "file"
+        )
 
         if not file or not file.filename:
-            flash("⚠️ لم يتم اختيار ملف.")
-            return redirect(url_for("index"))
+
+            flash(
+                "⚠️ لم يتم اختيار ملف."
+            )
+
+            return redirect(
+                url_for("index")
+            )
 
         original_filename = secure_filename(
             file.filename
         )
 
-        if not allowed_file(original_filename):
+        if not allowed_file(
+            original_filename
+        ):
+
             flash(
                 "⚠️ امتداد الملف غير مدعوم. "
                 "المسموح: EXE, SETUP, MSI, ZIP, RAR"
             )
 
-            return redirect(url_for("index"))
+            return redirect(
+                url_for("index")
+            )
 
-        # منع تكرار الاسم بإضافة UUID
         filename = (
             f"{uuid.uuid4().hex}_"
             f"{original_filename}"
@@ -318,13 +475,29 @@ def index():
             filename
         )
 
-        file.save(file_path)
+        try:
+
+            file.save(
+                file_path
+            )
+
+        except Exception as ex:
+
+            flash(
+                f"❌ فشل رفع الملف: {ex}"
+            )
+
+            return redirect(
+                url_for("index")
+            )
 
         flash(
-            f"✅ تم رفع {original_filename} بنجاح"
+            f"✅ تم رفع {original_filename} بنجاح."
         )
 
-        return redirect(url_for("index"))
+        return redirect(
+            url_for("index")
+        )
 
     # ========================================================
     # عرض الملفات
@@ -332,46 +505,71 @@ def index():
 
     programs = {}
 
+    upload_root = app.config[
+        "UPLOAD_FOLDER"
+    ]
+
     if os.path.isdir(
-        app.config["UPLOAD_FOLDER"]
+        upload_root
     ):
 
         for prog in sorted(
-            os.listdir(
-                app.config["UPLOAD_FOLDER"]
-            ),
+            os.listdir(upload_root),
             reverse=True
         ):
 
             prog_path = os.path.join(
-                app.config["UPLOAD_FOLDER"],
+                upload_root,
                 prog
             )
 
-            if not os.path.isdir(prog_path):
+            if not os.path.isdir(
+                prog_path
+            ):
                 continue
 
             files = []
 
+            try:
+
+                filenames = os.listdir(
+                    prog_path
+                )
+
+            except Exception:
+
+                filenames = []
+
             for filename in sorted(
-                os.listdir(prog_path),
+                filenames,
                 reverse=True
             ):
 
                 if filename.lower() == "manifest.json":
                     continue
 
-                files.append(filename)
+                full_path = os.path.join(
+                    prog_path,
+                    filename
+                )
+
+                if os.path.isfile(
+                    full_path
+                ):
+                    files.append(
+                        filename
+                    )
 
             programs[prog] = files
 
-    # قراءة Manifest الحالي
-    manifest = load_manifest("Devspark")
+    manifest_data = load_manifest(
+        DEFAULT_PROGRAM
+    )
 
     return render_template(
         "index.html",
         programs=programs,
-        manifest=manifest
+        manifest=manifest_data
     )
 
 
@@ -382,18 +580,37 @@ def index():
 @app.route(
     "/download/<program>/<path:filename>"
 )
-def download_file(program, filename):
+def download_file(
+    program,
+    filename
+):
 
-    program = secure_filename(program)
+    program = secure_filename(
+        program
+    )
 
-    # تنظيف مسار الملف
-    filename = os.path.basename(filename)
+    if not program:
+        return "Invalid program.", 400
+
+    filename = os.path.basename(
+        filename
+    )
+
+    if not filename:
+        return "Invalid filename.", 400
+
+    program_folder = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        program
+    )
+
+    if not os.path.isdir(
+        program_folder
+    ):
+        return "Program not found.", 404
 
     return send_from_directory(
-        os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            program
-        ),
+        program_folder,
         filename,
         as_attachment=True
     )
@@ -407,7 +624,10 @@ def download_file(program, filename):
     "/delete/<program>/<path:filename>",
     methods=["POST"]
 )
-def delete_file(program, filename):
+def delete_file(
+    program,
+    filename
+):
 
     password = request.form.get(
         "password",
@@ -415,11 +635,22 @@ def delete_file(program, filename):
     )
 
     if password != DELETE_PASSWORD:
-        flash("❌ كلمة المرور غير صحيحة")
-        return redirect(url_for("index"))
 
-    program = secure_filename(program)
-    filename = os.path.basename(filename)
+        flash(
+            "❌ كلمة المرور غير صحيحة."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    program = secure_filename(
+        program
+    )
+
+    filename = os.path.basename(
+        filename
+    )
 
     file_path = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -427,13 +658,18 @@ def delete_file(program, filename):
         filename
     )
 
-    if os.path.isfile(file_path):
+    if os.path.isfile(
+        file_path
+    ):
 
         try:
-            os.remove(file_path)
+
+            os.remove(
+                file_path
+            )
 
             flash(
-                f"🗑️ تم حذف {filename} بنجاح"
+                f"🗑️ تم حذف {filename} بنجاح."
             )
 
         except Exception as ex:
@@ -445,10 +681,12 @@ def delete_file(program, filename):
     else:
 
         flash(
-            "⚠️ الملف غير موجود"
+            "⚠️ الملف غير موجود."
         )
 
-    return redirect(url_for("index"))
+    return redirect(
+        url_for("index")
+    )
 
 
 # ============================================================
@@ -462,39 +700,110 @@ def delete_file(program, filename):
 def publish_update():
 
     # --------------------------------------------------------
-    # معلومات الإصدار
+    # Program
     # --------------------------------------------------------
 
     program_name = (
         request.form.get(
             "program_name",
-            "Devspark"
+            DEFAULT_PROGRAM
         ).strip()
     )
 
     if not program_name:
-        program_name = "Devspark"
+        program_name = DEFAULT_PROGRAM
 
     program_name = secure_filename(
         program_name
     )
 
     if not program_name:
-        program_name = "Devspark"
+        program_name = DEFAULT_PROGRAM
+
+    # --------------------------------------------------------
+    # Version
+    # --------------------------------------------------------
+
+    raw_release_version = request.form.get(
+        "version",
+        ""
+    )
 
     release_version = normalize_version(
-        request.form.get(
-            "version",
-            ""
+        raw_release_version
+    )
+
+    if not release_version:
+        flash(
+            "❌ رقم الإصدار غير صالح."
         )
+
+        return redirect(
+            url_for("index")
+        )
+
+    try:
+
+        release_version_obj = parse_version(
+            release_version,
+            "version"
+        )
+
+    except ValueError as ex:
+
+        flash(
+            f"❌ {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Minimum Version
+    # --------------------------------------------------------
+
+    raw_minimum_version = request.form.get(
+        "minimum_version",
+        "0.0.0"
     )
 
     minimum_version = normalize_version(
-        request.form.get(
-            "minimum_version",
-            "0.0.0"
-        )
+        raw_minimum_version,
+        default="0.0.0"
     )
+
+    try:
+
+        minimum_version_obj = parse_version(
+            minimum_version,
+            "minimumVersion"
+        )
+
+    except ValueError as ex:
+
+        flash(
+            f"❌ {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    if minimum_version_obj > release_version_obj:
+
+        flash(
+            "❌ Minimum Version لا يمكن أن يكون "
+            "أعلى من إصدار التحديث."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Release Notes
+    # --------------------------------------------------------
 
     release_notes = (
         request.form.get(
@@ -502,6 +811,10 @@ def publish_update():
             ""
         ).strip()
     )
+
+    # --------------------------------------------------------
+    # Flags
+    # --------------------------------------------------------
 
     requires_restart = (
         request.form.get(
@@ -516,7 +829,7 @@ def publish_update():
     )
 
     # --------------------------------------------------------
-    # ملف ZIP
+    # ZIP
     # --------------------------------------------------------
 
     file = request.files.get(
@@ -529,36 +842,36 @@ def publish_update():
             "❌ يجب اختيار ملف ZIP للتحديث."
         )
 
-        return redirect(url_for("index"))
+        return redirect(
+            url_for("index")
+        )
 
     original_filename = secure_filename(
         file.filename
     )
 
-    if not original_filename.lower().endswith(".zip"):
+    if not original_filename.lower().endswith(
+        ".zip"
+    ):
 
         flash(
             "❌ ملف التحديث يجب أن يكون ZIP."
         )
 
-        return redirect(url_for("index"))
+        return redirect(
+            url_for("index")
+        )
 
     # --------------------------------------------------------
-    # مجلد البرنامج
+    # Program Folder
     # --------------------------------------------------------
 
-    program_folder = os.path.join(
-        app.config["UPLOAD_FOLDER"],
+    program_folder = get_program_folder(
         program_name
     )
 
-    os.makedirs(
-        program_folder,
-        exist_ok=True
-    )
-
     # --------------------------------------------------------
-    # اسم الملف
+    # Update Filename
     # --------------------------------------------------------
 
     filename = (
@@ -571,7 +884,7 @@ def publish_update():
     )
 
     # --------------------------------------------------------
-    # تحقق من الإصدار الحالي
+    # Current Manifest
     # --------------------------------------------------------
 
     current_manifest = load_manifest(
@@ -589,11 +902,12 @@ def publish_update():
 
         try:
 
-            if version.parse(
-                release_version
-            ) <= version.parse(
-                current_version_text
-            ):
+            current_version_obj = parse_version(
+                current_version_text,
+                "الإصدار الحالي"
+            )
+
+            if release_version_obj <= current_version_obj:
 
                 flash(
                     f"❌ الإصدار {release_version} "
@@ -605,7 +919,7 @@ def publish_update():
                     url_for("index")
                 )
 
-        except Exception:
+        except ValueError:
 
             flash(
                 "❌ تعذر مقارنة أرقام الإصدارات."
@@ -616,17 +930,52 @@ def publish_update():
             )
 
     # --------------------------------------------------------
-    # حفظ ZIP
+    # Save ZIP
     # --------------------------------------------------------
 
     try:
 
-        file.save(file_path)
+        file.save(
+            file_path
+        )
 
     except Exception as ex:
 
         flash(
             f"❌ فشل حفظ ملف التحديث: {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Validate ZIP Size
+    # --------------------------------------------------------
+
+    try:
+
+        file_size = get_file_size(
+            file_path
+        )
+
+        if file_size <= 0:
+
+            raise ValueError(
+                "ملف ZIP فارغ."
+            )
+
+    except Exception as ex:
+
+        try:
+            os.remove(
+                file_path
+            )
+        except Exception:
+            pass
+
+        flash(
+            f"❌ ملف التحديث غير صالح: {ex}"
         )
 
         return redirect(
@@ -643,14 +992,12 @@ def publish_update():
             file_path
         )
 
-        file_size = get_file_size(
-            file_path
-        )
-
     except Exception as ex:
 
         try:
-            os.remove(file_path)
+            os.remove(
+                file_path
+            )
         except Exception:
             pass
 
@@ -663,7 +1010,7 @@ def publish_update():
         )
 
     # --------------------------------------------------------
-    # رابط التحميل
+    # HTTPS Package URL
     # --------------------------------------------------------
 
     package_url = build_download_url(
@@ -671,8 +1018,28 @@ def publish_update():
         filename
     )
 
+    # تأكيد إضافي
+    if not package_url.startswith(
+        "https://"
+    ):
+
+        try:
+            os.remove(
+                file_path
+            )
+        except Exception:
+            pass
+
+        flash(
+            "❌ خطأ داخلي: رابط التحديث يجب أن يكون HTTPS."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
     # --------------------------------------------------------
-    # تاريخ الإصدار
+    # Release Date
     # --------------------------------------------------------
 
     release_date = datetime.now(
@@ -683,54 +1050,68 @@ def publish_update():
     # Manifest
     # --------------------------------------------------------
 
-    manifest = {
+    manifest_data = {
 
-        "product": "Devspark ERP",
+        "product":
+            "Devspark ERP",
 
-        "program": program_name,
+        "program":
+            program_name,
 
-        "version": release_version,
+        "version":
+            release_version,
 
-        "minimumVersion": minimum_version,
+        "minimumVersion":
+            minimum_version,
 
-        "package": filename,
+        "package":
+            filename,
 
-        "packageUrl": package_url,
+        "packageUrl":
+            package_url,
 
-        "downloadUrl": package_url,
+        "downloadUrl":
+            package_url,
 
-        "fileName": filename,
+        "fileName":
+            filename,
 
-        "size": file_size,
+        "size":
+            file_size,
 
-        "sha256": sha256,
+        "sha256":
+            sha256,
 
-        "releaseDate": release_date,
+        "releaseDate":
+            release_date,
 
-        "releaseNotes": release_notes,
+        "releaseNotes":
+            release_notes,
 
-        "requiresRestart": requires_restart,
+        "requiresRestart":
+            requires_restart,
 
         "requiresDatabaseMigration":
             requires_database_migration
     }
 
     # --------------------------------------------------------
-    # حفظ Manifest
+    # Save Manifest
     # --------------------------------------------------------
 
     try:
 
         save_manifest(
-            manifest,
+            manifest_data,
             program_name
         )
 
     except Exception as ex:
 
-        # حذف ZIP إذا فشل إنشاء Manifest
         try:
-            os.remove(file_path)
+            os.remove(
+                file_path
+            )
         except Exception:
             pass
 
@@ -743,7 +1124,7 @@ def publish_update():
         )
 
     # --------------------------------------------------------
-    # نجاح
+    # Success
     # --------------------------------------------------------
 
     flash(
@@ -765,7 +1146,7 @@ def publish_update():
 )
 def manifest():
 
-    program_name = "Devspark"
+    program_name = DEFAULT_PROGRAM
 
     current_manifest = load_manifest(
         program_name
@@ -775,37 +1156,82 @@ def manifest():
 
         return jsonify({
 
-            "product": "Devspark ERP",
+            "product":
+                "Devspark ERP",
 
-            "program": program_name,
+            "program":
+                program_name,
 
-            "version": "0.0.0",
+            "version":
+                "0.0.0",
 
-            "minimumVersion": "0.0.0",
+            "minimumVersion":
+                "0.0.0",
 
-            "package": "",
+            "package":
+                "",
 
-            "packageUrl": "",
+            "packageUrl":
+                "",
 
-            "downloadUrl": "",
+            "downloadUrl":
+                "",
 
-            "fileName": "",
+            "fileName":
+                "",
 
-            "size": 0,
+            "size":
+                0,
 
-            "sha256": "",
+            "sha256":
+                "",
 
-            "releaseDate": "",
+            "releaseDate":
+                "",
 
-            "releaseNotes": "",
+            "releaseNotes":
+                "",
 
-            "requiresRestart": False,
+            "requiresRestart":
+                False,
 
-            "requiresDatabaseMigration": False
+            "requiresDatabaseMigration":
+                False
         })
 
-    return jsonify(
+    # --------------------------------------------------------
+    # حماية إضافية:
+    # إذا كان Manifest قديمًا ويحتوي HTTP،
+    # نقوم بتصحيح روابطه عند عرضه.
+    # --------------------------------------------------------
+
+    fixed_manifest = dict(
         current_manifest
+    )
+
+    filename = fixed_manifest.get(
+        "package"
+    ) or fixed_manifest.get(
+        "fileName"
+    )
+
+    if filename:
+
+        fixed_url = build_download_url(
+            program_name,
+            filename
+        )
+
+        fixed_manifest[
+            "packageUrl"
+        ] = fixed_url
+
+        fixed_manifest[
+            "downloadUrl"
+        ] = fixed_url
+
+    return jsonify(
+        fixed_manifest
     )
 
 
@@ -816,11 +1242,24 @@ def manifest():
 @app.route(
     "/latest_version/<program_name>"
 )
-def latest_version(program_name):
+def latest_version(
+    program_name
+):
 
     program_name = secure_filename(
         program_name
     )
+
+    if not program_name:
+
+        return jsonify({
+
+            "latest_version":
+                "0.0.0",
+
+            "download_url":
+                ""
+        })
 
     program_folder = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -833,13 +1272,15 @@ def latest_version(program_name):
 
         return jsonify({
 
-            "latest_version": "0.0.0",
+            "latest_version":
+                "0.0.0",
 
-            "download_url": ""
+            "download_url":
+                ""
         })
 
     # --------------------------------------------------------
-    # إذا كان هناك Manifest
+    # Manifest
     # --------------------------------------------------------
 
     current_manifest = load_manifest(
@@ -847,6 +1288,25 @@ def latest_version(program_name):
     )
 
     if current_manifest:
+
+        filename = (
+            current_manifest.get(
+                "package"
+            )
+            or
+            current_manifest.get(
+                "fileName"
+            )
+        )
+
+        download_url = ""
+
+        if filename:
+
+            download_url = build_download_url(
+                program_name,
+                filename
+            )
 
         return jsonify({
 
@@ -857,10 +1317,7 @@ def latest_version(program_name):
                 ),
 
             "download_url":
-                current_manifest.get(
-                    "packageUrl",
-                    ""
-                ),
+                download_url,
 
             "sha256":
                 current_manifest.get(
@@ -876,10 +1333,11 @@ def latest_version(program_name):
         })
 
     # --------------------------------------------------------
-    # النظام القديم
+    # Legacy
     # --------------------------------------------------------
 
     latest_file = None
+
     latest_ver = version.parse(
         "0.0.0"
     )
@@ -890,9 +1348,17 @@ def latest_version(program_name):
         re.IGNORECASE
     )
 
-    for filename in os.listdir(
-        program_folder
-    ):
+    try:
+
+        filenames = os.listdir(
+            program_folder
+        )
+
+    except Exception:
+
+        filenames = []
+
+    for filename in filenames:
 
         match = pattern.search(
             filename
@@ -908,21 +1374,23 @@ def latest_version(program_name):
             )
 
         except Exception:
+
             continue
 
         if current_ver > latest_ver:
 
             latest_ver = current_ver
-
             latest_file = filename
 
     if not latest_file:
 
         return jsonify({
 
-            "latest_version": "0.0.0",
+            "latest_version":
+                "0.0.0",
 
-            "download_url": ""
+            "download_url":
+                ""
         })
 
     download_url = build_download_url(
@@ -951,7 +1419,8 @@ def health():
 
     return jsonify({
 
-        "status": "ok",
+        "status":
+            "ok",
 
         "service":
             "Devspark Update Server",
@@ -959,7 +1428,10 @@ def health():
         "time":
             datetime.now(
                 timezone.utc
-            ).isoformat()
+            ).isoformat(),
+
+        "publicBaseUrl":
+            PUBLIC_BASE_URL
     })
 
 
