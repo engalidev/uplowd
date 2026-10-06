@@ -1,4 +1,3 @@
-```python
 from flask import Flask
 
 from config import *
@@ -45,4 +44,3 @@ app.register_blueprint(
 
 if __name__ == "__main__":
     app.run(debug=True)
-```
