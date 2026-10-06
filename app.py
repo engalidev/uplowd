@@ -8,11 +8,13 @@ from flask import (
     flash,
     jsonify,
 )
+
 import os
 import re
 import json
 import uuid
 import hashlib
+
 from datetime import datetime, timezone
 
 from packaging import version
@@ -57,9 +59,18 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Devspark Update Server
 # ============================================================
 
-# مهم:
-# نستخدم HTTPS بشكل صريح لأن DevsparkUpdateService
-# يرفض أي PackageUrl لا يستخدم HTTPS.
+# مهم جدًا:
+#
+# Devspark Updater يشترط HTTPS.
+#
+# مثال Railway:
+#
+# https://uplowd-production.up.railway.app
+#
+# ويمكن تغييره من Railway Environment Variables:
+#
+# PUBLIC_BASE_URL
+#
 PUBLIC_BASE_URL = os.environ.get(
     "PUBLIC_BASE_URL",
     "https://uplowd-production.up.railway.app"
@@ -68,11 +79,39 @@ PUBLIC_BASE_URL = os.environ.get(
 
 DEFAULT_PROGRAM = "Devspark"
 
+DEFAULT_PRODUCT = "Devspark ERP"
+
 
 # ============================================================
-# Allowed Files
+# Update Package Rules
 # ============================================================
 
+# النظام الجديد يعتمد على:
+#
+#     Devspark_Setup.exe
+#
+# ولا يعتمد على:
+#
+#     ZIP
+#     RAR
+#     MSI
+#     Manifest جانبي
+#
+# لذلك النشر الرسمي للتحديث يسمح بـ EXE فقط.
+#
+UPDATE_EXTENSION = ".exe"
+
+SETUP_FILENAME = "Devspark_Setup.exe"
+
+
+# ============================================================
+# General Upload Rules
+# ============================================================
+
+# هذه الامتدادات يمكن رفعها من صفحة الإدارة العامة.
+#
+# لكن /publish-update يقبل EXE فقط.
+#
 ALLOWED_EXTENSIONS = {
     ".exe",
     ".setup",
@@ -86,7 +125,23 @@ ALLOWED_EXTENSIONS = {
 # Helpers
 # ============================================================
 
+def log(message):
+    """
+    تسجيل معلومات مفيدة في Railway logs.
+    """
+
+    print(
+        "[DEVSPARK UPDATE SERVER] "
+        + str(message),
+        flush=True
+    )
+
+
 def allowed_file(filename):
+    """
+    التحقق من امتداد ملف الرفع العام.
+    """
+
     if not filename:
         return False
 
@@ -118,12 +173,18 @@ def calculate_sha256(file_path):
             if not chunk:
                 break
 
-            sha256.update(chunk)
+            sha256.update(
+                chunk
+            )
 
     return sha256.hexdigest()
 
 
 def get_file_size(file_path):
+    """
+    الحصول على حجم الملف بالبايت.
+    """
+
     return os.path.getsize(
         file_path
     )
@@ -134,14 +195,25 @@ def normalize_version(
     default="0.0.0"
 ):
     """
-    تحويل الإصدار إلى صيغة:
-    1.0.0
+    تحويل الإصدار إلى:
+
+        1.0.0
+
+    أمثلة:
+
+        1       -> 1.0.0
+        1.2     -> 1.2.0
+        1.2.3   -> 1.2.3
+        v1.2.3  -> 1.2.3
+        Devspark 1.2.3 -> 1.2.3
     """
 
     if value is None:
         return default
 
-    value = str(value).strip()
+    value = str(
+        value
+    ).strip()
 
     if not value:
         return default
@@ -169,7 +241,7 @@ def parse_version(
     field_name="version"
 ):
     """
-    قراءة إصدار والتحقق منه.
+    قراءة الإصدار والتحقق منه.
     """
 
     normalized = normalize_version(
@@ -183,14 +255,41 @@ def parse_version(
         )
 
     try:
+
         return version.parse(
             normalized
         )
 
-    except Exception:
+    except Exception as ex:
+
         raise ValueError(
             f"رقم الإصدار في {field_name} غير صالح."
-        )
+        ) from ex
+
+
+def sanitize_program_name(
+    program_name
+):
+    """
+    تنظيف اسم البرنامج ومنع Path Traversal.
+    """
+
+    program_name = (
+        str(program_name or "")
+        .strip()
+    )
+
+    if not program_name:
+        program_name = DEFAULT_PROGRAM
+
+    program_name = secure_filename(
+        program_name
+    )
+
+    if not program_name:
+        program_name = DEFAULT_PROGRAM
+
+    return program_name
 
 
 def get_program_folder(
@@ -200,12 +299,9 @@ def get_program_folder(
     الحصول على مجلد البرنامج.
     """
 
-    program_name = secure_filename(
+    program_name = sanitize_program_name(
         program_name
     )
-
-    if not program_name:
-        program_name = DEFAULT_PROGRAM
 
     program_folder = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -259,9 +355,22 @@ def load_manifest(
             encoding="utf-8"
         ) as f:
 
-            return json.load(f)
+            data = json.load(f)
 
-    except Exception:
+        if not isinstance(
+            data,
+            dict
+        ):
+            return None
+
+        return data
+
+    except Exception as ex:
+
+        log(
+            "WARNING: Failed to load manifest: "
+            + str(ex)
+        )
 
         return None
 
@@ -279,29 +388,45 @@ def save_manifest(
     )
 
     temp_path = (
-        manifest_path +
-        "." +
-        uuid.uuid4().hex +
-        ".tmp"
+        manifest_path
+        + "."
+        + uuid.uuid4().hex
+        + ".tmp"
     )
 
-    with open(
-        temp_path,
-        "w",
-        encoding="utf-8"
-    ) as f:
+    try:
 
-        json.dump(
-            manifest,
-            f,
-            ensure_ascii=False,
-            indent=2
+        with open(
+            temp_path,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                manifest,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
+        os.replace(
+            temp_path,
+            manifest_path
         )
 
-    os.replace(
-        temp_path,
-        manifest_path
-    )
+    except Exception:
+
+        try:
+            if os.path.exists(
+                temp_path
+            ):
+                os.remove(
+                    temp_path
+                )
+        except Exception:
+            pass
+
+        raise
 
 
 def build_download_url(
@@ -309,18 +434,20 @@ def build_download_url(
     filename
 ):
     """
-    إنشاء رابط تحميل HTTPS.
+    إنشاء رابط HTTPS للتحميل.
 
-    مهم جدًا:
-    DevsparkUpdateService يشترط HTTPS.
+    مثال:
+
+    https://uplowd-production.up.railway.app/
+    download/Devspark/Devspark_Setup.exe
     """
 
-    program_name = secure_filename(
+    program_name = sanitize_program_name(
         program_name
     )
 
     filename = os.path.basename(
-        filename
+        str(filename or "")
     )
 
     return (
@@ -331,74 +458,78 @@ def build_download_url(
     )
 
 
-def find_latest_zip(
-    program_name
+def is_https_url(url):
+    """
+    التأكد من أن الرابط HTTPS.
+    """
+
+    return (
+        isinstance(
+            url,
+            str
+        )
+        and
+        url.lower().startswith(
+            "https://"
+        )
+    )
+
+
+def validate_setup_filename(
+    filename
 ):
     """
-    البحث عن أحدث ZIP اعتمادًا على الإصدار.
+    التحقق من اسم ملف Setup.
+
+    الاسم المفضل:
+
+        Devspark_Setup.exe
+
+    ونسمح فقط بـ EXE.
     """
 
-    program_folder = get_program_folder(
-        program_name
+    if not filename:
+        return False
+
+    filename = os.path.basename(
+        filename
     )
 
-    latest_file = None
+    if not filename.lower().endswith(
+        UPDATE_EXTENSION
+    ):
+        return False
 
-    latest_version = version.parse(
-        "0.0.0"
-    )
+    return True
 
-    pattern = re.compile(
-        r"(?:^|[-_])v?"
-        r"(\d+\.\d+\.\d+)"
-        r"(?:[-_.]|$)",
-        re.IGNORECASE
-    )
+
+def remove_file_safely(
+    file_path
+):
+    """
+    حذف ملف بدون رفع استثناء.
+    """
 
     try:
 
-        filenames = os.listdir(
-            program_folder
-        )
-
-    except Exception:
-
-        return None, "0.0.0"
-
-    for filename in filenames:
-
-        if filename.lower() == "manifest.json":
-            continue
-
-        if not filename.lower().endswith(".zip"):
-            continue
-
-        match = pattern.search(
-            filename
-        )
-
-        if not match:
-            continue
-
-        try:
-
-            current_version = version.parse(
-                match.group(1)
+        if file_path and os.path.isfile(
+            file_path
+        ):
+            os.remove(
+                file_path
             )
 
-        except Exception:
+            log(
+                "Deleted temporary/failed file: "
+                + file_path
+            )
 
-            continue
+    except Exception as ex:
 
-        if current_version > latest_version:
-
-            latest_version = current_version
-            latest_file = filename
-
-    return (
-        latest_file,
-        str(latest_version)
-    )
+        log(
+            "WARNING: Could not delete file: "
+            + str(ex)
+        )
 
 
 # ============================================================
@@ -413,26 +544,24 @@ def index():
 
     if request.method == "POST":
 
-        program_name = (
+        # ----------------------------------------------------
+        # Program
+        # ----------------------------------------------------
+
+        program_name = sanitize_program_name(
             request.form.get(
                 "program_name",
                 DEFAULT_PROGRAM
-            ).strip()
+            )
         )
-
-        if not program_name:
-            program_name = DEFAULT_PROGRAM
-
-        program_name = secure_filename(
-            program_name
-        )
-
-        if not program_name:
-            program_name = DEFAULT_PROGRAM
 
         program_folder = get_program_folder(
             program_name
         )
+
+        # ----------------------------------------------------
+        # Uploaded file
+        # ----------------------------------------------------
 
         file = request.files.get(
             "file"
@@ -465,6 +594,10 @@ def index():
                 url_for("index")
             )
 
+        # ----------------------------------------------------
+        # Generate safe storage filename
+        # ----------------------------------------------------
+
         filename = (
             f"{uuid.uuid4().hex}_"
             f"{original_filename}"
@@ -475,6 +608,10 @@ def index():
             filename
         )
 
+        # ----------------------------------------------------
+        # Save
+        # ----------------------------------------------------
+
         try:
 
             file.save(
@@ -483,6 +620,11 @@ def index():
 
         except Exception as ex:
 
+            log(
+                "ERROR: General upload failed: "
+                + str(ex)
+            )
+
             flash(
                 f"❌ فشل رفع الملف: {ex}"
             )
@@ -490,6 +632,11 @@ def index():
             return redirect(
                 url_for("index")
             )
+
+        log(
+            "General file uploaded: "
+            + file_path
+        )
 
         flash(
             f"✅ تم رفع {original_filename} بنجاح."
@@ -513,10 +660,20 @@ def index():
         upload_root
     ):
 
-        for prog in sorted(
-            os.listdir(upload_root),
-            reverse=True
-        ):
+        try:
+
+            program_names = sorted(
+                os.listdir(
+                    upload_root
+                ),
+                reverse=True
+            )
+
+        except Exception:
+
+            program_names = []
+
+        for prog in program_names:
 
             prog_path = os.path.join(
                 upload_root,
@@ -562,6 +719,10 @@ def index():
 
             programs[prog] = files
 
+    # --------------------------------------------------------
+    # Devspark Manifest
+    # --------------------------------------------------------
+
     manifest_data = load_manifest(
         DEFAULT_PROGRAM
     )
@@ -585,12 +746,9 @@ def download_file(
     filename
 ):
 
-    program = secure_filename(
+    program = sanitize_program_name(
         program
     )
-
-    if not program:
-        return "Invalid program.", 400
 
     filename = os.path.basename(
         filename
@@ -608,6 +766,23 @@ def download_file(
         program_folder
     ):
         return "Program not found.", 404
+
+    full_path = os.path.join(
+        program_folder,
+        filename
+    )
+
+    if not os.path.isfile(
+        full_path
+    ):
+        return "File not found.", 404
+
+    log(
+        "Download requested: "
+        + program
+        + "/"
+        + filename
+    )
 
     return send_from_directory(
         program_folder,
@@ -644,13 +819,23 @@ def delete_file(
             url_for("index")
         )
 
-    program = secure_filename(
+    program = sanitize_program_name(
         program
     )
 
     filename = os.path.basename(
         filename
     )
+
+    if not filename:
+
+        flash(
+            "⚠️ اسم الملف غير صالح."
+        )
+
+        return redirect(
+            url_for("index")
+        )
 
     file_path = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -668,11 +853,21 @@ def delete_file(
                 file_path
             )
 
+            log(
+                "File deleted: "
+                + file_path
+            )
+
             flash(
                 f"🗑️ تم حذف {filename} بنجاح."
             )
 
         except Exception as ex:
+
+            log(
+                "ERROR: Delete failed: "
+                + str(ex)
+            )
 
             flash(
                 f"❌ فشل حذف الملف: {ex}"
@@ -699,26 +894,29 @@ def delete_file(
 )
 def publish_update():
 
+    log(
+        "=================================================="
+    )
+
+    log(
+        "PUBLISH UPDATE START"
+    )
+
     # --------------------------------------------------------
     # Program
     # --------------------------------------------------------
 
-    program_name = (
+    program_name = sanitize_program_name(
         request.form.get(
             "program_name",
             DEFAULT_PROGRAM
-        ).strip()
+        )
     )
 
-    if not program_name:
-        program_name = DEFAULT_PROGRAM
-
-    program_name = secure_filename(
-        program_name
+    log(
+        "Program: "
+        + program_name
     )
-
-    if not program_name:
-        program_name = DEFAULT_PROGRAM
 
     # --------------------------------------------------------
     # Version
@@ -730,10 +928,12 @@ def publish_update():
     )
 
     release_version = normalize_version(
-        raw_release_version
+        raw_release_version,
+        default=""
     )
 
     if not release_version:
+
         flash(
             "❌ رقم الإصدار غير صالح."
         )
@@ -758,6 +958,11 @@ def publish_update():
         return redirect(
             url_for("index")
         )
+
+    log(
+        "Release version: "
+        + release_version
+    )
 
     # --------------------------------------------------------
     # Minimum Version
@@ -789,6 +994,11 @@ def publish_update():
         return redirect(
             url_for("index")
         )
+
+    log(
+        "Minimum version: "
+        + minimum_version
+    )
 
     if minimum_version_obj > release_version_obj:
 
@@ -829,7 +1039,7 @@ def publish_update():
     )
 
     # --------------------------------------------------------
-    # ZIP
+    # Setup EXE
     # --------------------------------------------------------
 
     file = request.files.get(
@@ -839,7 +1049,7 @@ def publish_update():
     if not file or not file.filename:
 
         flash(
-            "❌ يجب اختيار ملف ZIP للتحديث."
+            "❌ يجب اختيار ملف Devspark_Setup.exe للتحديث."
         )
 
         return redirect(
@@ -850,12 +1060,21 @@ def publish_update():
         file.filename
     )
 
+    log(
+        "Uploaded setup filename: "
+        + str(original_filename)
+    )
+
+    # --------------------------------------------------------
+    # EXE ONLY
+    # --------------------------------------------------------
+
     if not original_filename.lower().endswith(
-        ".zip"
+        ".exe"
     ):
 
         flash(
-            "❌ ملف التحديث يجب أن يكون ZIP."
+            "❌ ملف التحديث يجب أن يكون EXE."
         )
 
         return redirect(
@@ -868,19 +1087,6 @@ def publish_update():
 
     program_folder = get_program_folder(
         program_name
-    )
-
-    # --------------------------------------------------------
-    # Update Filename
-    # --------------------------------------------------------
-
-    filename = (
-        f"Devspark-{release_version}.zip"
-    )
-
-    file_path = os.path.join(
-        program_folder,
-        filename
     )
 
     # --------------------------------------------------------
@@ -897,7 +1103,8 @@ def publish_update():
             current_manifest.get(
                 "version",
                 "0.0.0"
-            )
+            ),
+            default="0.0.0"
         )
 
         try:
@@ -905,6 +1112,11 @@ def publish_update():
             current_version_obj = parse_version(
                 current_version_text,
                 "الإصدار الحالي"
+            )
+
+            log(
+                "Current published version: "
+                + current_version_text
             )
 
             if release_version_obj <= current_version_obj:
@@ -930,7 +1142,66 @@ def publish_update():
             )
 
     # --------------------------------------------------------
-    # Save ZIP
+    # Official Setup Filename
+    # --------------------------------------------------------
+    #
+    # مهما كان اسم الملف الذي رفعه المستخدم:
+    #
+    #     Devspark_Setup.exe
+    #
+    # هو الاسم الرسمي الذي سيستخدمه الخادم.
+    #
+    # هذا يجعل USB والتحميل الإلكتروني متطابقين.
+    #
+    # --------------------------------------------------------
+
+    filename = SETUP_FILENAME
+
+    file_path = os.path.join(
+        program_folder,
+        filename
+    )
+
+    log(
+        "Published setup filename: "
+        + filename
+    )
+
+    # --------------------------------------------------------
+    # Remove previous setup if exists
+    # --------------------------------------------------------
+
+    if os.path.isfile(
+        file_path
+    ):
+
+        try:
+
+            os.remove(
+                file_path
+            )
+
+            log(
+                "Previous Devspark_Setup.exe removed."
+            )
+
+        except Exception as ex:
+
+            log(
+                "ERROR: Could not replace previous setup: "
+                + str(ex)
+            )
+
+            flash(
+                "❌ تعذر استبدال Devspark_Setup.exe القديم."
+            )
+
+            return redirect(
+                url_for("index")
+            )
+
+    # --------------------------------------------------------
+    # Save Setup EXE
     # --------------------------------------------------------
 
     try:
@@ -939,7 +1210,20 @@ def publish_update():
             file_path
         )
 
+        log(
+            "Setup EXE saved successfully."
+        )
+
     except Exception as ex:
+
+        log(
+            "ERROR: Failed to save setup EXE: "
+            + str(ex)
+        )
+
+        remove_file_safely(
+            file_path
+        )
 
         flash(
             f"❌ فشل حفظ ملف التحديث: {ex}"
@@ -950,7 +1234,43 @@ def publish_update():
         )
 
     # --------------------------------------------------------
-    # Validate ZIP Size
+    # Validate Setup Exists
+    # --------------------------------------------------------
+
+    if not os.path.isfile(
+        file_path
+    ):
+
+        flash(
+            "❌ لم يتم إنشاء Devspark_Setup.exe."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Validate Extension
+    # --------------------------------------------------------
+
+    if not validate_setup_filename(
+        filename
+    ):
+
+        remove_file_safely(
+            file_path
+        )
+
+        flash(
+            "❌ اسم ملف Setup غير صالح."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Validate Size
     # --------------------------------------------------------
 
     try:
@@ -959,20 +1279,29 @@ def publish_update():
             file_path
         )
 
+        log(
+            "Setup size: "
+            + str(file_size)
+            + " bytes"
+        )
+
+        log(
+            "Setup size: "
+            + f"{file_size / 1024 / 1024:.2f}"
+            + " MB"
+        )
+
         if file_size <= 0:
 
             raise ValueError(
-                "ملف ZIP فارغ."
+                "ملف Devspark_Setup.exe فارغ."
             )
 
     except Exception as ex:
 
-        try:
-            os.remove(
-                file_path
-            )
-        except Exception:
-            pass
+        remove_file_safely(
+            file_path
+        )
 
         flash(
             f"❌ ملف التحديث غير صالح: {ex}"
@@ -992,14 +1321,16 @@ def publish_update():
             file_path
         )
 
+        log(
+            "SHA256: "
+            + sha256
+        )
+
     except Exception as ex:
 
-        try:
-            os.remove(
-                file_path
-            )
-        except Exception:
-            pass
+        remove_file_safely(
+            file_path
+        )
 
         flash(
             f"❌ فشل حساب SHA-256: {ex}"
@@ -1018,17 +1349,18 @@ def publish_update():
         filename
     )
 
-    # تأكيد إضافي
-    if not package_url.startswith(
-        "https://"
+    log(
+        "Package URL: "
+        + package_url
+    )
+
+    if not is_https_url(
+        package_url
     ):
 
-        try:
-            os.remove(
-                file_path
-            )
-        except Exception:
-            pass
+        remove_file_safely(
+            file_path
+        )
 
         flash(
             "❌ خطأ داخلي: رابط التحديث يجب أن يكون HTTPS."
@@ -1049,11 +1381,20 @@ def publish_update():
     # --------------------------------------------------------
     # Manifest
     # --------------------------------------------------------
+    #
+    # هذا هو الـ Manifest الذي سيقرأه:
+    #
+    # DevsparkUpdateService
+    #
+    # والمهم أن package / packageUrl / fileName
+    # أصبحت تشير إلى EXE وليس ZIP.
+    #
+    # --------------------------------------------------------
 
     manifest_data = {
 
         "product":
-            "Devspark ERP",
+            DEFAULT_PRODUCT,
 
         "program":
             program_name,
@@ -1096,6 +1437,73 @@ def publish_update():
     }
 
     # --------------------------------------------------------
+    # Validate Manifest Before Saving
+    # --------------------------------------------------------
+
+    if not manifest_data["package"].lower().endswith(
+        ".exe"
+    ):
+
+        remove_file_safely(
+            file_path
+        )
+
+        flash(
+            "❌ خطأ: Manifest يجب أن يشير إلى ملف EXE."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    if not is_https_url(
+        manifest_data["packageUrl"]
+    ):
+
+        remove_file_safely(
+            file_path
+        )
+
+        flash(
+            "❌ خطأ: packageUrl يجب أن يستخدم HTTPS."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    if manifest_data["size"] <= 0:
+
+        remove_file_safely(
+            file_path
+        )
+
+        flash(
+            "❌ خطأ: حجم Setup غير صالح."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    if not re.fullmatch(
+        r"[a-fA-F0-9]{64}",
+        manifest_data["sha256"]
+    ):
+
+        remove_file_safely(
+            file_path
+        )
+
+        flash(
+            "❌ خطأ: SHA-256 غير صالح."
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
     # Save Manifest
     # --------------------------------------------------------
 
@@ -1106,14 +1514,20 @@ def publish_update():
             program_name
         )
 
+        log(
+            "manifest.json saved successfully."
+        )
+
     except Exception as ex:
 
-        try:
-            os.remove(
-                file_path
-            )
-        except Exception:
-            pass
+        remove_file_safely(
+            file_path
+        )
+
+        log(
+            "ERROR: Failed to save manifest: "
+            + str(ex)
+        )
 
         flash(
             f"❌ فشل إنشاء manifest.json: {ex}"
@@ -1126,6 +1540,40 @@ def publish_update():
     # --------------------------------------------------------
     # Success
     # --------------------------------------------------------
+
+    log(
+        "PUBLISH UPDATE SUCCESS"
+    )
+
+    log(
+        "Version: "
+        + release_version
+    )
+
+    log(
+        "Setup: "
+        + filename
+    )
+
+    log(
+        "Size: "
+        + str(file_size)
+        + " bytes"
+    )
+
+    log(
+        "SHA256: "
+        + sha256
+    )
+
+    log(
+        "URL: "
+        + package_url
+    )
+
+    log(
+        "=================================================="
+    )
 
     flash(
         f"🚀 تم نشر Devspark ERP "
@@ -1152,12 +1600,16 @@ def manifest():
         program_name
     )
 
+    # --------------------------------------------------------
+    # No Manifest
+    # --------------------------------------------------------
+
     if not current_manifest:
 
         return jsonify({
 
             "product":
-                "Devspark ERP",
+                DEFAULT_PRODUCT,
 
             "program":
                 program_name,
@@ -1200,27 +1652,45 @@ def manifest():
         })
 
     # --------------------------------------------------------
-    # حماية إضافية:
-    # إذا كان Manifest قديمًا ويحتوي HTTP،
-    # نقوم بتصحيح روابطه عند عرضه.
+    # Copy Manifest
     # --------------------------------------------------------
 
     fixed_manifest = dict(
         current_manifest
     )
 
-    filename = fixed_manifest.get(
-        "package"
-    ) or fixed_manifest.get(
-        "fileName"
+    # --------------------------------------------------------
+    # Force HTTPS + current download URL
+    # --------------------------------------------------------
+
+    filename = (
+        fixed_manifest.get(
+            "package"
+        )
+        or
+        fixed_manifest.get(
+            "fileName"
+        )
     )
 
     if filename:
+
+        filename = os.path.basename(
+            filename
+        )
 
         fixed_url = build_download_url(
             program_name,
             filename
         )
+
+        fixed_manifest[
+            "package"
+        ] = filename
+
+        fixed_manifest[
+            "fileName"
+        ] = filename
 
         fixed_manifest[
             "packageUrl"
@@ -1229,6 +1699,48 @@ def manifest():
         fixed_manifest[
             "downloadUrl"
         ] = fixed_url
+
+    # --------------------------------------------------------
+    # Extra safety:
+    # Never expose a ZIP as the official update package.
+    # --------------------------------------------------------
+
+    if filename and not filename.lower().endswith(
+        ".exe"
+    ):
+
+        log(
+            "WARNING: Existing manifest points to a non-EXE."
+        )
+
+        log(
+            "Filename: "
+            + filename
+        )
+
+        fixed_manifest[
+            "package"
+        ] = ""
+
+        fixed_manifest[
+            "fileName"
+        ] = ""
+
+        fixed_manifest[
+            "packageUrl"
+        ] = ""
+
+        fixed_manifest[
+            "downloadUrl"
+        ] = ""
+
+        fixed_manifest[
+            "size"
+        ] = 0
+
+        fixed_manifest[
+            "sha256"
+        ] = ""
 
     return jsonify(
         fixed_manifest
@@ -1246,20 +1758,9 @@ def latest_version(
     program_name
 ):
 
-    program_name = secure_filename(
+    program_name = sanitize_program_name(
         program_name
     )
-
-    if not program_name:
-
-        return jsonify({
-
-            "latest_version":
-                "0.0.0",
-
-            "download_url":
-                ""
-        })
 
     program_folder = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -1276,7 +1777,13 @@ def latest_version(
                 "0.0.0",
 
             "download_url":
-                ""
+                "",
+
+            "sha256":
+                "",
+
+            "size":
+                0
         })
 
     # --------------------------------------------------------
@@ -1299,14 +1806,41 @@ def latest_version(
             )
         )
 
-        download_url = ""
-
-        if filename:
-
-            download_url = build_download_url(
-                program_name,
-                filename
+        # النظام الجديد يقبل EXE فقط.
+        if (
+            not filename
+            or
+            not filename.lower().endswith(
+                ".exe"
             )
+        ):
+
+            return jsonify({
+
+                "latest_version":
+                    current_manifest.get(
+                        "version",
+                        "0.0.0"
+                    ),
+
+                "download_url":
+                    "",
+
+                "sha256":
+                    "",
+
+                "size":
+                    0
+            })
+
+        filename = os.path.basename(
+            filename
+        )
+
+        download_url = build_download_url(
+            program_name,
+            filename
+        )
 
         return jsonify({
 
@@ -1333,7 +1867,19 @@ def latest_version(
         })
 
     # --------------------------------------------------------
-    # Legacy
+    # Legacy fallback
+    # --------------------------------------------------------
+    #
+    # لا نبحث عن ZIP هنا.
+    #
+    # نبحث فقط عن EXE يحمل إصدارًا.
+    #
+    # أمثلة:
+    #
+    # Devspark_Setup_1.0.1.exe
+    # Devspark_v1.0.1.exe
+    # Devspark-1.0.1.exe
+    #
     # --------------------------------------------------------
 
     latest_file = None
@@ -1343,8 +1889,9 @@ def latest_version(
     )
 
     pattern = re.compile(
-        r"_v(\d+\.\d+\.\d+)"
-        r"\.(exe|setup|msi|zip|rar)$",
+        r"(?:^|[-_])v?"
+        r"(\d+\.\d+\.\d+)"
+        r"(?:[-_.]|$)",
         re.IGNORECASE
     )
 
@@ -1359,6 +1906,14 @@ def latest_version(
         filenames = []
 
     for filename in filenames:
+
+        if filename.lower() == "manifest.json":
+            continue
+
+        if not filename.lower().endswith(
+            ".exe"
+        ):
+            continue
 
         match = pattern.search(
             filename
@@ -1390,7 +1945,13 @@ def latest_version(
                 "0.0.0",
 
             "download_url":
-                ""
+                "",
+
+            "sha256":
+                "",
+
+            "size":
+                0
         })
 
     download_url = build_download_url(
@@ -1398,13 +1959,39 @@ def latest_version(
         latest_file
     )
 
+    full_path = os.path.join(
+        program_folder,
+        latest_file
+    )
+
+    try:
+
+        size = get_file_size(
+            full_path
+        )
+
+        sha256 = calculate_sha256(
+            full_path
+        )
+
+    except Exception:
+
+        size = 0
+        sha256 = ""
+
     return jsonify({
 
         "latest_version":
             str(latest_ver),
 
         "download_url":
-            download_url
+            download_url,
+
+        "sha256":
+            sha256,
+
+        "size":
+            size
     })
 
 
@@ -1431,7 +2018,13 @@ def health():
             ).isoformat(),
 
         "publicBaseUrl":
-            PUBLIC_BASE_URL
+            PUBLIC_BASE_URL,
+
+        "updatePackage":
+            SETUP_FILENAME,
+
+        "updateMode":
+            "setup-exe"
     })
 
 
@@ -1446,6 +2039,37 @@ if __name__ == "__main__":
             "PORT",
             5000
         )
+    )
+
+    log(
+        "=================================================="
+    )
+
+    log(
+        "Devspark Update Server starting..."
+    )
+
+    log(
+        "Port: "
+        + str(port)
+    )
+
+    log(
+        "Public Base URL: "
+        + PUBLIC_BASE_URL
+    )
+
+    log(
+        "Update package mode: SETUP EXE"
+    )
+
+    log(
+        "Official Setup filename: "
+        + SETUP_FILENAME
+    )
+
+    log(
+        "=================================================="
     )
 
     app.run(
