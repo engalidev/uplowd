@@ -1,7 +1,11 @@
-
-from flask import render_template, request, redirect, url_for, session, flash
-
-from models import Admin
+from flask import (
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash
+)
 
 from routes.admin import admin
 
@@ -15,39 +19,48 @@ def login():
 
     # إذا كان المدير مسجل دخول بالفعل
     if session.get("admin_logged_in"):
-        return redirect(url_for("admin.dashboard"))
+        return redirect(
+            url_for("admin.dashboard")
+        )
 
     if request.method == "POST":
 
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
 
-        # التحقق من الحقول
-        if not username or not password:
-            flash(
-                "يرجى إدخال اسم المستخدم وكلمة المرور.",
-                "error"
-            )
+        password = request.form.get(
+            "password",
+            ""
+        )
 
-            return render_template(
-                "admin/admin_login.html"
-            )
+        # ====================================================
+        # Admin Credentials
+        # ====================================================
 
-        # البحث عن المدير
-        admin_user = Admin.query.filter_by(
-            username=username
-        ).first()
+        ADMIN_USERNAME = "betacode"
+        ADMIN_PASSWORD = "ali1234"
 
-        # التحقق من بيانات الدخول
-        if admin_user and admin_user.password == password:
+        # ====================================================
+        # Check Login
+        # ====================================================
+
+        if (
+            username == ADMIN_USERNAME
+            and password == ADMIN_PASSWORD
+        ):
 
             session["admin_logged_in"] = True
-            session["admin_id"] = admin_user.id
-            session["admin_username"] = admin_user.username
+            session["admin_username"] = username
 
             return redirect(
                 url_for("admin.dashboard")
             )
+
+        # ====================================================
+        # Invalid Login
+        # ====================================================
 
         flash(
             "اسم المستخدم أو كلمة المرور غير صحيحة.",
@@ -66,13 +79,14 @@ def login():
 @admin.route("/logout")
 def logout():
 
-    session.pop("admin_logged_in", None)
-    session.pop("admin_id", None)
-    session.pop("admin_username", None)
+    session.pop(
+        "admin_logged_in",
+        None
+    )
 
-    flash(
-        "تم تسجيل الخروج بنجاح.",
-        "success"
+    session.pop(
+        "admin_username",
+        None
     )
 
     return redirect(
