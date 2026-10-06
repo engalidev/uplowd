@@ -5,8 +5,7 @@ from flask import Flask
 # ============================================================
 
 from routes.admin import admin
-from routes.user.main_routes import main
-
+from routes.user.main import main
 
 # ============================================================
 # Flask Application
