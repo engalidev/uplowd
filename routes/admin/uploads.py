@@ -1,4 +1,3 @@
-```python
 from flask import (
     render_template,
     request,
@@ -1602,4 +1601,3 @@ def publish_update():
     return redirect(
         url_for("admin.uploads")
     )
-```
