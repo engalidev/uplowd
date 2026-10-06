@@ -1,1 +1,439 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111827"
+    >
+
+    <title>تسجيل دخول الإدارة - Devspark ERP</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family:
+                "Segoe UI",
+                Tahoma,
+                Arial,
+                sans-serif;
+
+            direction: rtl;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #111827 0%,
+                    #1f2937 50%,
+                    #111827 100%
+                );
+
+            color: #111827;
+
+            min-height: 100vh;
+        }
+
+        .login-page {
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .login-card {
+            width: 100%;
+
+            background: #ffffff;
+
+            border-radius: 16px;
+
+            padding: 32px;
+
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        /* =========================================================
+           BRAND
+           ========================================================= */
+
+        .login-brand {
+            text-align: center;
+
+            margin-bottom: 28px;
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+
+            margin: 0 auto 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 15px;
+
+            background: #2563eb;
+            color: #ffffff;
+
+            font-size: 30px;
+            font-weight: 800;
+
+            box-shadow:
+                0 8px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .login-title {
+            margin: 0;
+
+            color: #111827;
+
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .login-subtitle {
+            margin: 8px 0 0;
+
+            color: #6b7280;
+
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+           FLASH
+           ========================================================= */
+
+        .flash-container {
+            display: flex;
+            flex-direction: column;
+
+            gap: 10px;
+
+            margin-bottom: 18px;
+        }
+
+        .flash-message {
+            padding: 12px 14px;
+
+            border-radius: 8px;
+
+            border: 1px solid #fecaca;
+
+            background: #fef2f2;
+
+            color: #991b1b;
+
+            font-size: 13px;
+            line-height: 1.6;
+
+            text-align: right;
+        }
+
+        /* =========================================================
+           FORM
+           ========================================================= */
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #374151;
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+
+            min-height: 46px;
+
+            padding: 10px 13px;
+
+            border: 1px solid #d1d5db;
+
+            border-radius: 9px;
+
+            background: #ffffff;
+
+            color: #111827;
+
+            font-family: inherit;
+
+            font-size: 14px;
+
+            outline: none;
+
+            transition:
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+        }
+
+        .form-input:focus {
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .login-button {
+            width: 100%;
+
+            min-height: 46px;
+
+            margin-top: 5px;
+
+            border: none;
+
+            border-radius: 9px;
+
+            background: #2563eb;
+
+            color: #ffffff;
+
+            font-family: inherit;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                background 0.15s ease,
+                transform 0.05s ease;
+        }
+
+        .login-button:hover {
+            background: #1d4ed8;
+        }
+
+        .login-button:active {
+            transform: translateY(1px);
+        }
+
+        /* =========================================================
+           BACK
+           ========================================================= */
+
+        .back-home {
+            display: block;
+
+            margin-top: 18px;
+
+            color: #6b7280;
+
+            text-align: center;
+
+            font-size: 13px;
+
+            text-decoration: none;
+        }
+
+        .back-home:hover {
+            color: #2563eb;
+        }
+
+        /* =========================================================
+           FOOTER
+           ========================================================= */
+
+        .login-footer {
+            margin-top: 20px;
+
+            color: rgba(255, 255, 255, 0.65);
+
+            text-align: center;
+
+            font-size: 12px;
+        }
+
+        /* =========================================================
+           MOBILE
+           ========================================================= */
+
+        @media (max-width: 480px) {
+
+            .login-page {
+                padding: 15px;
+            }
+
+            .login-card {
+                padding: 24px 20px;
+            }
+
+            .login-title {
+                font-size: 21px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="login-page">
+
+    <div class="login-container">
+
+        <div class="login-card">
+
+            <div class="login-brand">
+
+                <div class="login-logo">
+                    D
+                </div>
+
+                <h1 class="login-title">
+                    تسجيل دخول الإدارة
+                </h1>
+
+                <p class="login-subtitle">
+                    Devspark ERP
+                    <br>
+                    الدخول إلى لوحة إدارة النظام والتحديثات
+                </p>
+
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-container">
+
+                        {% for category, message in messages %}
+
+                            <div class="flash-message">
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+            <form
+                method="POST"
+                action="{{ url_for('login.login') }}"
+                autocomplete="off"
+            >
+
+                <div class="form-group">
+
+                    <label
+                        class="form-label"
+                        for="username"
+                    >
+                        اسم المستخدم
+                    </label>
+
+                    <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        class="form-input"
+                        placeholder="أدخل اسم المستخدم"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label
+                        class="form-label"
+                        for="password"
+                    >
+                        كلمة المرور
+                    </label>
+
+                    <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        class="form-input"
+                        placeholder="أدخل كلمة المرور"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    تسجيل الدخول
+                </button>
+
+            </form>
+
+            <a
+                href="{{ url_for('index') }}"
+                class="back-home"
+            >
+                العودة إلى الصفحة الرئيسية
+            </a>
+
+        </div>
+
+        <div class="login-footer">
+            Devspark ERP
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
