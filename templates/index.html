@@ -2,22 +2,35 @@
 <html lang="ar" dir="rtl">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Devspark ERP - إدارة التحديثات والملفات</title>
+    <title>
+        Devspark ERP - إدارة التحديثات والملفات
+    </title>
 
     <style>
+
+        /* =====================================================
+           Global
+           ===================================================== */
 
         * {
             box-sizing: border-box;
         }
 
+        html {
+            direction: rtl;
+        }
+
         body {
+
             margin: 0;
             padding: 0;
+
             font-family:
                 "Segoe UI",
                 Tahoma,
@@ -32,48 +45,70 @@
                 );
 
             color: #1f2937;
+
             min-height: 100vh;
         }
 
         .container {
-            width: min(1150px, 94%);
-            margin: 30px auto 60px;
+
+            width: min(
+                1150px,
+                94%
+            );
+
+            margin:
+                30px auto 60px;
         }
+
 
         /* =====================================================
            Header
            ===================================================== */
 
         .header {
+
             background: #ffffff;
+
             border-radius: 18px;
-            padding: 25px 30px;
+
+            padding:
+                25px 30px;
+
             margin-bottom: 22px;
 
             box-shadow:
-                0 10px 30px rgba(0, 0, 0, 0.08);
+                0 10px 30px
+                rgba(0, 0, 0, 0.08);
 
             display: flex;
+
             align-items: center;
+
             justify-content: space-between;
+
             gap: 20px;
 
             flex-wrap: wrap;
         }
 
         .header-title {
+
             display: flex;
+
             align-items: center;
+
             gap: 15px;
         }
 
         .logo {
+
             width: 58px;
             height: 58px;
 
             border-radius: 15px;
 
             display: flex;
+
             align-items: center;
             justify-content: center;
 
@@ -87,65 +122,89 @@
             color: white;
 
             font-size: 24px;
+
             font-weight: 800;
 
             box-shadow:
-                0 8px 18px rgba(37, 99, 235, 0.25);
+                0 8px 18px
+                rgba(37, 99, 235, 0.25);
         }
 
         h1 {
+
             margin: 0;
+
             font-size: 25px;
+
             color: #111827;
         }
 
         .subtitle {
+
             margin-top: 5px;
+
             color: #6b7280;
+
             font-size: 14px;
         }
 
         .status {
-            padding: 9px 15px;
+
+            padding:
+                9px 15px;
+
             border-radius: 30px;
 
             background: #ecfdf5;
+
             color: #047857;
 
             font-size: 13px;
+
             font-weight: 700;
 
-            border: 1px solid #a7f3d0;
+            border:
+                1px solid #a7f3d0;
         }
+
 
         /* =====================================================
            Flash Messages
            ===================================================== */
 
         .flash-container {
+
             margin-bottom: 20px;
         }
 
         .flash {
+
             background: #ffffff;
+
             border-radius: 12px;
 
-            padding: 14px 18px;
+            padding:
+                14px 18px;
+
             margin-bottom: 10px;
 
             box-shadow:
-                0 5px 18px rgba(0, 0, 0, 0.06);
+                0 5px 18px
+                rgba(0, 0, 0, 0.06);
 
-            border-right: 5px solid #2563eb;
+            border-right:
+                5px solid #2563eb;
 
             font-size: 14px;
         }
+
 
         /* =====================================================
            Cards
            ===================================================== */
 
         .card {
+
             background: #ffffff;
 
             border-radius: 18px;
@@ -155,12 +214,16 @@
             margin-bottom: 22px;
 
             box-shadow:
-                0 10px 30px rgba(0, 0, 0, 0.07);
+                0 10px 30px
+                rgba(0, 0, 0, 0.07);
         }
 
         .card-header {
+
             display: flex;
+
             align-items: center;
+
             justify-content: space-between;
 
             gap: 15px;
@@ -171,47 +234,66 @@
         }
 
         .card-title {
+
             margin: 0;
 
             font-size: 20px;
+
             font-weight: 800;
 
             color: #111827;
         }
 
         .card-description {
+
             color: #6b7280;
+
             font-size: 13px;
+
             margin-top: 5px;
         }
 
+
         /* =====================================================
-           Current Manifest
+           Current Version
            ===================================================== */
 
         .current-version {
+
             display: inline-flex;
 
             align-items: center;
+
             gap: 7px;
 
             background: #eff6ff;
+
             color: #1d4ed8;
 
-            border: 1px solid #bfdbfe;
+            border:
+                1px solid #bfdbfe;
 
-            padding: 8px 14px;
+            padding:
+                8px 14px;
 
             border-radius: 30px;
 
             font-size: 13px;
+
             font-weight: 700;
         }
 
+
+        /* =====================================================
+           Manifest
+           ===================================================== */
+
         .manifest-box {
+
             background: #f8fafc;
 
-            border: 1px solid #e2e8f0;
+            border:
+                1px solid #e2e8f0;
 
             border-radius: 14px;
 
@@ -221,6 +303,7 @@
         }
 
         .manifest-grid {
+
             display: grid;
 
             grid-template-columns:
@@ -233,9 +316,11 @@
         }
 
         .info-item {
+
             background: #ffffff;
 
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid #e5e7eb;
 
             border-radius: 10px;
 
@@ -243,6 +328,7 @@
         }
 
         .info-label {
+
             display: block;
 
             color: #6b7280;
@@ -253,6 +339,7 @@
         }
 
         .info-value {
+
             font-size: 14px;
 
             font-weight: 700;
@@ -262,11 +349,27 @@
             word-break: break-word;
         }
 
+        .mono {
+
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+            direction: ltr;
+
+            text-align: left;
+
+            font-size: 12px;
+        }
+
+
         /* =====================================================
            Form
            ===================================================== */
 
         .form-grid {
+
             display: grid;
 
             grid-template-columns:
@@ -279,14 +382,18 @@
         }
 
         .form-group {
+
             margin-bottom: 2px;
         }
 
         .form-group.full {
-            grid-column: 1 / -1;
+
+            grid-column:
+                1 / -1;
         }
 
         label {
+
             display: block;
 
             margin-bottom: 7px;
@@ -306,13 +413,15 @@
 
             width: 100%;
 
-            border: 1px solid #d1d5db;
+            border:
+                1px solid #d1d5db;
 
             background: #ffffff;
 
             border-radius: 10px;
 
-            padding: 12px 13px;
+            padding:
+                12px 13px;
 
             font-family: inherit;
 
@@ -331,26 +440,126 @@
         textarea:focus,
         select:focus {
 
-            border-color: #2563eb;
+            border-color:
+                #2563eb;
 
             box-shadow:
                 0 0 0 3px
-                rgba(37, 99, 235, 0.10);
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.10
+                );
         }
 
         textarea {
+
             min-height: 120px;
 
             resize: vertical;
         }
 
         .hint {
+
             color: #6b7280;
 
             font-size: 12px;
 
             margin-top: 6px;
         }
+
+
+        /* =====================================================
+           File Upload
+           ===================================================== */
+
+        .upload-box {
+
+            border:
+                2px dashed #cbd5e1;
+
+            border-radius: 14px;
+
+            padding: 25px;
+
+            background: #f8fafc;
+
+            text-align: center;
+
+            transition: .2s;
+        }
+
+        .upload-box:hover {
+
+            border-color:
+                #2563eb;
+
+            background:
+                #eff6ff;
+        }
+
+        .upload-icon {
+
+            font-size: 36px;
+
+            margin-bottom: 8px;
+        }
+
+        .upload-title {
+
+            font-size: 16px;
+
+            font-weight: 800;
+
+            color: #111827;
+
+            margin-bottom: 5px;
+        }
+
+        .upload-description {
+
+            color: #6b7280;
+
+            font-size: 13px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =====================================================
+           Setup Badge
+           ===================================================== */
+
+        .setup-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding:
+                8px 13px;
+
+            border-radius: 30px;
+
+            background:
+                #ecfdf5;
+
+            color:
+                #047857;
+
+            border:
+                1px solid #a7f3d0;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            margin-top: 10px;
+        }
+
 
         /* =====================================================
            Checkboxes
@@ -385,7 +594,8 @@
 
             background: #f8fafc;
 
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid #e5e7eb;
 
             cursor: pointer;
 
@@ -394,9 +604,11 @@
 
         .checkbox:hover {
 
-            background: #eff6ff;
+            background:
+                #eff6ff;
 
-            border-color: #bfdbfe;
+            border-color:
+                #bfdbfe;
         }
 
         .checkbox input {
@@ -404,7 +616,8 @@
             width: 18px;
             height: 18px;
 
-            accent-color: #2563eb;
+            accent-color:
+                #2563eb;
 
             cursor: pointer;
         }
@@ -418,6 +631,7 @@
             color: #374151;
         }
 
+
         /* =====================================================
            Buttons
            ===================================================== */
@@ -426,7 +640,8 @@
 
             display: flex;
 
-            justify-content: flex-start;
+            justify-content:
+                flex-start;
 
             align-items: center;
 
@@ -444,7 +659,8 @@
 
             border-radius: 10px;
 
-            padding: 12px 20px;
+            padding:
+                12px 20px;
 
             font-family: inherit;
 
@@ -473,7 +689,17 @@
         button:hover,
         .button:hover {
 
-            transform: translateY(-1px);
+            transform:
+                translateY(-1px);
+        }
+
+        button:disabled {
+
+            opacity: .55;
+
+            cursor: not-allowed;
+
+            transform: none;
         }
 
         .btn-primary {
@@ -489,88 +715,50 @@
 
             box-shadow:
                 0 7px 18px
-                rgba(37, 99, 235, 0.20);
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.20
+                );
         }
 
         .btn-secondary {
 
-            background: #eef2f7;
+            background:
+                #eef2f7;
 
-            color: #374151;
+            color:
+                #374151;
 
-            border: 1px solid #dbe1e8;
+            border:
+                1px solid #dbe1e8;
         }
 
         .btn-danger {
 
-            background: #fee2e2;
+            background:
+                #fee2e2;
 
-            color: #b91c1c;
+            color:
+                #b91c1c;
 
-            border: 1px solid #fecaca;
+            border:
+                1px solid #fecaca;
         }
 
         .btn-success {
 
-            background: #dcfce7;
+            background:
+                #dcfce7;
 
-            color: #166534;
+            color:
+                #166534;
 
-            border: 1px solid #bbf7d0;
+            border:
+                1px solid #bbf7d0;
         }
 
-        /* =====================================================
-           Upload Section
-           ===================================================== */
-
-        .upload-box {
-
-            border: 2px dashed #cbd5e1;
-
-            border-radius: 14px;
-
-            padding: 25px;
-
-            background: #f8fafc;
-
-            text-align: center;
-
-            transition: .2s;
-        }
-
-        .upload-box:hover {
-
-            border-color: #2563eb;
-
-            background: #eff6ff;
-        }
-
-        .upload-icon {
-
-            font-size: 36px;
-
-            margin-bottom: 8px;
-        }
-
-        .upload-title {
-
-            font-size: 16px;
-
-            font-weight: 800;
-
-            color: #111827;
-
-            margin-bottom: 5px;
-        }
-
-        .upload-description {
-
-            color: #6b7280;
-
-            font-size: 13px;
-
-            margin-bottom: 15px;
-        }
 
         /* =====================================================
            Files
@@ -578,7 +766,8 @@
 
         .program-section {
 
-            border: 1px solid #e5e7eb;
+            border:
+                1px solid #e5e7eb;
 
             border-radius: 14px;
 
@@ -586,20 +775,25 @@
 
             margin-bottom: 15px;
 
-            background: #ffffff;
+            background:
+                #ffffff;
         }
 
         .program-header {
 
-            background: #f8fafc;
+            background:
+                #f8fafc;
 
-            padding: 14px 17px;
+            padding:
+                14px 17px;
 
             display: flex;
 
-            justify-content: space-between;
+            justify-content:
+                space-between;
 
-            align-items: center;
+            align-items:
+                center;
 
             gap: 10px;
 
@@ -608,16 +802,20 @@
 
         .program-name {
 
-            font-weight: 800;
+            font-weight:
+                800;
 
-            color: #111827;
+            color:
+                #111827;
         }
 
         .file-count {
 
-            color: #6b7280;
+            color:
+                #6b7280;
 
-            font-size: 12px;
+            font-size:
+                12px;
         }
 
         .file-list {
@@ -633,26 +831,33 @@
 
             display: flex;
 
-            align-items: center;
+            align-items:
+                center;
 
-            justify-content: space-between;
+            justify-content:
+                space-between;
 
             gap: 15px;
 
-            padding: 13px 17px;
+            padding:
+                13px 17px;
 
-            border-top: 1px solid #f0f2f5;
+            border-top:
+                1px solid #f0f2f5;
 
             flex-wrap: wrap;
         }
 
         .file-name {
 
-            font-size: 13px;
+            font-size:
+                13px;
 
-            color: #374151;
+            color:
+                #374151;
 
-            word-break: break-all;
+            word-break:
+                break-all;
 
             flex: 1;
         }
@@ -663,39 +868,51 @@
 
             gap: 7px;
 
-            align-items: center;
+            align-items:
+                center;
 
-            flex-wrap: wrap;
+            flex-wrap:
+                wrap;
         }
 
         .small-button {
 
-            padding: 8px 12px;
+            padding:
+                8px 12px;
 
-            font-size: 12px;
+            font-size:
+                12px;
 
-            border-radius: 8px;
+            border-radius:
+                8px;
         }
 
+
         /* =====================================================
-           Empty State
+           Empty
            ===================================================== */
 
         .empty {
 
-            text-align: center;
+            text-align:
+                center;
 
-            padding: 35px 15px;
+            padding:
+                35px 15px;
 
-            color: #6b7280;
+            color:
+                #6b7280;
         }
 
         .empty-icon {
 
-            font-size: 38px;
+            font-size:
+                38px;
 
-            margin-bottom: 8px;
+            margin-bottom:
+                8px;
         }
+
 
         /* =====================================================
            Footer
@@ -703,14 +920,19 @@
 
         footer {
 
-            text-align: center;
+            text-align:
+                center;
 
-            color: #94a3b8;
+            color:
+                #94a3b8;
 
-            font-size: 12px;
+            font-size:
+                12px;
 
-            margin-top: 25px;
+            margin-top:
+                25px;
         }
+
 
         /* =====================================================
            Responsive
@@ -719,60 +941,80 @@
         @media (max-width: 760px) {
 
             .container {
+
                 width: 94%;
+
                 margin-top: 15px;
             }
 
             .header {
+
                 padding: 20px;
             }
 
             .card {
+
                 padding: 18px;
             }
 
             .form-grid {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
 
             .form-group.full {
-                grid-column: auto;
+
+                grid-column:
+                    auto;
             }
 
             .checkbox-grid {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
             }
 
             .header-title {
+
                 width: 100%;
             }
 
             .status {
+
                 width: 100%;
-                text-align: center;
+
+                text-align:
+                    center;
             }
 
             .file-item {
-                align-items: flex-start;
+
+                align-items:
+                    flex-start;
             }
 
             .file-actions {
+
                 width: 100%;
             }
 
             .file-actions .button,
             .file-actions button {
+
                 flex: 1;
             }
         }
 
     </style>
+
 </head>
 
 
 <body>
 
 <div class="container">
+
 
     <!-- =====================================================
          Header
@@ -833,7 +1075,7 @@
 
 
     <!-- =====================================================
-         Current Version
+         Current Published Version
          ====================================================== -->
 
     <section class="card">
@@ -847,22 +1089,31 @@
                 </h2>
 
                 <div class="card-description">
-                    الإصدار الذي سيقرأه برنامج Devspark ERP من manifest.json
+                    الإصدار الذي سيقرأه Devspark ERP من manifest.json
                 </div>
 
             </div>
 
+
             {% if manifest %}
 
                 <div class="current-version">
+
                     الإصدار
-                    {{ manifest.get("version", "0.0.0") }}
+
+                    {{ manifest.get(
+                        "version",
+                        "0.0.0"
+                    ) }}
+
                 </div>
 
             {% else %}
 
                 <div class="current-version">
+
                     لا يوجد إصدار منشور
+
                 </div>
 
             {% endif %}
@@ -876,6 +1127,9 @@
 
                 <div class="manifest-grid">
 
+
+                    <!-- Product -->
+
                     <div class="info-item">
 
                         <span class="info-label">
@@ -883,11 +1137,18 @@
                         </span>
 
                         <span class="info-value">
-                            {{ manifest.get("product", "Devspark ERP") }}
+
+                            {{ manifest.get(
+                                "product",
+                                "Devspark ERP"
+                            ) }}
+
                         </span>
 
                     </div>
 
+
+                    <!-- Version -->
 
                     <div class="info-item">
 
@@ -896,11 +1157,18 @@
                         </span>
 
                         <span class="info-value">
-                            {{ manifest.get("version", "0.0.0") }}
+
+                            {{ manifest.get(
+                                "version",
+                                "0.0.0"
+                            ) }}
+
                         </span>
 
                     </div>
 
+
+                    <!-- Minimum -->
 
                     <div class="info-item">
 
@@ -909,33 +1177,75 @@
                         </span>
 
                         <span class="info-value">
-                            {{ manifest.get("minimumVersion", "0.0.0") }}
+
+                            {{ manifest.get(
+                                "minimumVersion",
+                                "0.0.0"
+                            ) }}
+
                         </span>
 
                     </div>
 
 
+                    <!-- Package -->
+
                     <div class="info-item">
 
                         <span class="info-label">
-                            حجم الحزمة
+                            ملف التحديث
                         </span>
 
                         <span class="info-value">
 
-                            {% set size = manifest.get("size", 0) %}
+                            {{ manifest.get(
+                                "fileName",
+                                manifest.get(
+                                    "package",
+                                    "-"
+                                )
+                            ) }}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- Size -->
+
+                    <div class="info-item">
+
+                        <span class="info-label">
+                            حجم Setup
+                        </span>
+
+                        <span class="info-value">
+
+                            {% set size =
+                                manifest.get(
+                                    "size",
+                                    0
+                                )
+                            %}
 
                             {% if size > 1048576 %}
 
-                                {{ "%.2f"|format(size / 1048576) }} MB
+                                {{ "%.2f"|format(
+                                    size / 1048576
+                                ) }}
+                                MB
 
                             {% elif size > 1024 %}
 
-                                {{ "%.2f"|format(size / 1024) }} KB
+                                {{ "%.2f"|format(
+                                    size / 1024
+                                ) }}
+                                KB
 
                             {% else %}
 
-                                {{ size }} Bytes
+                                {{ size }}
+                                Bytes
 
                             {% endif %}
 
@@ -944,18 +1254,7 @@
                     </div>
 
 
-                    <div class="info-item">
-
-                        <span class="info-label">
-                            الملف
-                        </span>
-
-                        <span class="info-value">
-                            {{ manifest.get("fileName", manifest.get("package", "-")) }}
-                        </span>
-
-                    </div>
-
+                    <!-- Restart -->
 
                     <div class="info-item">
 
@@ -965,16 +1264,25 @@
 
                         <span class="info-value">
 
-                            {% if manifest.get("requiresRestart", false) %}
+                            {% if manifest.get(
+                                "requiresRestart",
+                                false
+                            ) %}
+
                                 نعم
+
                             {% else %}
+
                                 لا
+
                             {% endif %}
 
                         </span>
 
                     </div>
 
+
+                    <!-- Database -->
 
                     <div class="info-item">
 
@@ -984,16 +1292,25 @@
 
                         <span class="info-value">
 
-                            {% if manifest.get("requiresDatabaseMigration", false) %}
+                            {% if manifest.get(
+                                "requiresDatabaseMigration",
+                                false
+                            ) %}
+
                                 نعم
+
                             {% else %}
+
                                 لا
+
                             {% endif %}
 
                         </span>
 
                     </div>
 
+
+                    <!-- Release Date -->
 
                     <div class="info-item">
 
@@ -1002,13 +1319,20 @@
                         </span>
 
                         <span class="info-value">
-                            {{ manifest.get("releaseDate", "-") }}
+
+                            {{ manifest.get(
+                                "releaseDate",
+                                "-"
+                            ) }}
+
                         </span>
 
                     </div>
 
                 </div>
 
+
+                <!-- SHA -->
 
                 <div style="margin-top:15px;">
 
@@ -1018,10 +1342,12 @@
                             SHA-256
                         </span>
 
-                        <span class="info-value"
-                              style="font-family:monospace; font-size:12px;">
+                        <span class="info-value mono">
 
-                            {{ manifest.get("sha256", "-") }}
+                            {{ manifest.get(
+                                "sha256",
+                                "-"
+                            ) }}
 
                         </span>
 
@@ -1030,7 +1356,11 @@
                 </div>
 
 
-                {% if manifest.get("releaseNotes") %}
+                <!-- Release Notes -->
+
+                {% if manifest.get(
+                    "releaseNotes"
+                ) %}
 
                     <div style="margin-top:12px;">
 
@@ -1041,9 +1371,14 @@
                             </span>
 
                             <div class="info-value"
-                                 style="white-space:pre-wrap; font-weight:500;">
+                                 style="
+                                     white-space:pre-wrap;
+                                     font-weight:500;
+                                 ">
 
-                                {{ manifest.get("releaseNotes") }}
+                                {{ manifest.get(
+                                    "releaseNotes"
+                                ) }}
 
                             </div>
 
@@ -1054,22 +1389,34 @@
                 {% endif %}
 
 
+                <!-- Actions -->
+
                 <div class="actions">
 
-                    {% if manifest.get("packageUrl") %}
 
-                        <a class="button btn-success"
-                           href="{{ manifest.get('packageUrl') }}">
+                    {% if manifest.get(
+                        "packageUrl"
+                    ) %}
 
-                            ⬇️ تحميل الإصدار
+                        <a
+                            class="button btn-success"
+                            href="{{ manifest.get(
+                                'packageUrl'
+                            ) }}">
+
+                            ⬇️ تحميل Devspark_Setup.exe
 
                         </a>
 
                     {% endif %}
 
-                    <a class="button btn-secondary"
-                       href="{{ url_for('manifest') }}"
-                       target="_blank">
+
+                    <a
+                        class="button btn-secondary"
+                        href="{{ url_for(
+                            'manifest'
+                        ) }}"
+                        target="_blank">
 
                         📄 فتح Manifest
 
@@ -1078,6 +1425,7 @@
                 </div>
 
             </div>
+
 
         {% else %}
 
@@ -1113,7 +1461,11 @@
                 </h2>
 
                 <div class="card-description">
-                    ارفع حزمة Devspark ERP وسيتم إنشاء manifest.json وحساب SHA-256 والحجم تلقائيًا.
+
+                    ارفع ملف
+                    <strong>Devspark_Setup.exe</strong>
+                    وسيتم إنشاء manifest.json وحساب SHA-256 والحجم تلقائيًا.
+
                 </div>
 
             </div>
@@ -1121,20 +1473,28 @@
         </div>
 
 
-        <form method="POST"
-              action="{{ url_for('publish_update') }}"
-              enctype="multipart/form-data">
+        <form
+            method="POST"
+            action="{{ url_for(
+                'publish_update'
+            ) }}"
+            enctype="multipart/form-data"
+            id="publishUpdateForm">
 
 
             <div class="form-grid">
 
 
-                <!-- Program -->
+                <!-- =================================================
+                     Program
+                     ================================================= -->
 
                 <div class="form-group">
 
                     <label for="program_name">
+
                         اسم البرنامج
+
                     </label>
 
                     <input
@@ -1146,41 +1506,56 @@
                     >
 
                     <div class="hint">
-                        يجب أن يبقى Devspark إذا كان التطبيق يستخدم Manifest الرئيسي.
+
+                        يجب أن يبقى Devspark إذا كان التطبيق يستخدم
+                        Manifest الرئيسي.
+
                     </div>
 
                 </div>
 
 
-                <!-- Version -->
+                <!-- =================================================
+                     Version
+                     ================================================= -->
 
                 <div class="form-group">
 
                     <label for="version">
+
                         رقم الإصدار
+
                     </label>
 
                     <input
                         type="text"
                         id="version"
                         name="version"
-                        placeholder="مثال: 1.0.1"
+                        placeholder="مثال: 1.0.2"
                         required
+                        autocomplete="off"
                     >
 
                     <div class="hint">
-                        استخدم صيغة مثل 1.0.1
+
+                        استخدم صيغة مثل:
+                        <strong>1.0.2</strong>
+
                     </div>
 
                 </div>
 
 
-                <!-- Minimum Version -->
+                <!-- =================================================
+                     Minimum Version
+                     ================================================= -->
 
                 <div class="form-group">
 
                     <label for="minimum_version">
+
                         Minimum Version
+
                     </label>
 
                     <input
@@ -1189,60 +1564,105 @@
                         name="minimum_version"
                         value="1.0.0"
                         placeholder="مثال: 1.0.0"
+                        autocomplete="off"
                     >
 
                     <div class="hint">
+
                         أقل إصدار مسموح له بتثبيت هذا التحديث.
+
                     </div>
 
                 </div>
 
 
-                <!-- ZIP -->
+                <!-- =================================================
+                     Setup EXE
+                     ================================================= -->
 
                 <div class="form-group">
 
                     <label for="update_file">
-                        ملف التحديث ZIP
+
+                        ملف التحديث
+
                     </label>
 
-                    <input
-                        type="file"
-                        id="update_file"
-                        name="update_file"
-                        accept=".zip"
-                        required
-                    >
+                    <div class="upload-box">
+
+                        <div class="upload-icon">
+                            📦
+                        </div>
+
+                        <div class="upload-title">
+
+                            Devspark_Setup.exe
+
+                        </div>
+
+                        <div class="upload-description">
+
+                            اختر ملف التثبيت الموحد الذي تم إنشاؤه بواسطة Inno Setup.
+
+                        </div>
+
+                        <input
+                            type="file"
+                            id="update_file"
+                            name="update_file"
+                            accept=".exe"
+                            required
+                        >
+
+                        <div class="setup-badge">
+
+                            🛡️ Setup EXE فقط
+
+                        </div>
+
+                    </div>
 
                     <div class="hint">
-                        يجب أن تكون الحزمة ZIP الخاصة بـ Devspark ERP.
+
+                        لا تستخدم ZIP.
+                        ملف Setup هو نفسه الذي يستخدمه المستخدم للتثبيت والتحديث من USB.
+
                     </div>
 
                 </div>
 
 
-                <!-- Release Notes -->
+                <!-- =================================================
+                     Release Notes
+                     ================================================= -->
 
                 <div class="form-group full">
 
                     <label for="release_notes">
+
                         ملاحظات الإصدار
+
                     </label>
 
                     <textarea
                         id="release_notes"
                         name="release_notes"
-                        placeholder="اكتب التغييرات والإصلاحات الموجودة في هذا الإصدار..."></textarea>
+                        placeholder="اكتب التغييرات والإصلاحات الموجودة في هذا الإصدار..."
+                    ></textarea>
 
                 </div>
 
 
-                <!-- Options -->
+                <!-- =================================================
+                     Options
+                     ================================================= -->
 
                 <div class="form-group full">
 
                     <label>
+
                         خيارات التحديث
+
                     </label>
 
                     <div class="checkbox-grid">
@@ -1257,7 +1677,9 @@
                             >
 
                             <span>
+
                                 🔄 يتطلب إعادة تشغيل Devspark
+
                             </span>
 
                         </label>
@@ -1271,10 +1693,13 @@
                             >
 
                             <span>
+
                                 🗄️ يتطلب ترحيل قاعدة البيانات
+
                             </span>
 
                         </label>
+
 
                     </div>
 
@@ -1283,11 +1708,16 @@
             </div>
 
 
+            <!-- =====================================================
+                 Actions
+                 ====================================================== -->
+
             <div class="actions">
 
                 <button
                     type="submit"
-                    class="btn-primary">
+                    class="btn-primary"
+                    id="publishButton">
 
                     🚀 نشر التحديث
 
@@ -1309,7 +1739,7 @@
 
 
     <!-- =====================================================
-         Legacy Upload
+         General Upload
          ====================================================== -->
 
     <section class="card">
@@ -1319,11 +1749,15 @@
             <div>
 
                 <h2 class="card-title">
+
                     📤 رفع ملف عادي
+
                 </h2>
 
                 <div class="card-description">
-                    لرفع ملفات EXE أو MSI أو ZIP أو RAR بدون إنشاء إصدار تحديث.
+
+                    لرفع ملفات عامة بدون إنشاء إصدار تحديث.
+
                 </div>
 
             </div>
@@ -1331,9 +1765,12 @@
         </div>
 
 
-        <form method="POST"
-              action="{{ url_for('index') }}"
-              enctype="multipart/form-data">
+        <form
+            method="POST"
+            action="{{ url_for(
+                'index'
+            ) }}"
+            enctype="multipart/form-data">
 
 
             <div class="form-grid">
@@ -1342,7 +1779,9 @@
                 <div class="form-group">
 
                     <label for="legacy_program_name">
+
                         اسم البرنامج
+
                     </label>
 
                     <input
@@ -1359,7 +1798,9 @@
                 <div class="form-group">
 
                     <label for="legacy_file">
+
                         الملف
+
                     </label>
 
                     <input
@@ -1404,11 +1845,15 @@
             <div>
 
                 <h2 class="card-title">
+
                     📁 الملفات المرفوعة
+
                 </h2>
 
                 <div class="card-description">
+
                     جميع الملفات الموجودة على خادم Devspark.
+
                 </div>
 
             </div>
@@ -1463,7 +1908,11 @@
 
                                         <a
                                             class="button small-button btn-success"
-                                            href="{{ url_for('download_file', program=program, filename=file) }}">
+                                            href="{{ url_for(
+                                                'download_file',
+                                                program=program,
+                                                filename=file
+                                            ) }}">
 
                                             ⬇️ تحميل
 
@@ -1472,8 +1921,12 @@
 
                                         <form
                                             method="POST"
-                                            action="{{ url_for('delete_file', program=program, filename=file) }}"
-                                            onsubmit="return confirmDelete('{{ file|replace("'", "\\'") }}');"
+                                            action="{{ url_for(
+                                                'delete_file',
+                                                program=program,
+                                                filename=file
+                                            ) }}"
+                                            onsubmit="return confirmDelete(this, {{ file|tojson }});"
                                             style="display:inline;">
 
                                             <button
@@ -1495,6 +1948,7 @@
 
 
                         </ul>
+
 
                     {% else %}
 
@@ -1540,11 +1994,15 @@
             <div>
 
                 <h2 class="card-title">
+
                     🔗 روابط خدمة التحديث
+
                 </h2>
 
                 <div class="card-description">
+
                     هذه الروابط يستخدمها Devspark ERP.
+
                 </div>
 
             </div>
@@ -1554,37 +2012,54 @@
 
         <div class="manifest-box">
 
-            <div class="info-item"
-                 style="margin-bottom:10px;">
+
+            <!-- Manifest -->
+
+            <div
+                class="info-item"
+                style="margin-bottom:10px;">
 
                 <span class="info-label">
+
                     Manifest
+
                 </span>
 
-                <span class="info-value"
-                      style="font-family:monospace;">
+                <span
+                    class="info-value mono">
 
-                    {{ url_for('manifest', _external=True) }}
+                    {{ url_for(
+                        'manifest',
+                        _external=True
+                    ) }}
 
                 </span>
 
             </div>
 
+
+            <!-- Health -->
 
             <div class="info-item">
 
                 <span class="info-label">
+
                     Health Check
+
                 </span>
 
-                <span class="info-value"
-                      style="font-family:monospace;">
+                <span
+                    class="info-value mono">
 
-                    {{ url_for('health', _external=True) }}
+                    {{ url_for(
+                        'health',
+                        _external=True
+                    ) }}
 
                 </span>
 
             </div>
+
 
         </div>
 
@@ -1607,32 +2082,48 @@
 
 <script>
 
-    function confirmDelete(filename) {
+    // =========================================================
+    // Delete Confirmation
+    // =========================================================
+
+    function confirmDelete(
+        form,
+        filename
+    ) {
 
         const password = prompt(
-            "أدخل كلمة مرور حذف الملف:\n" + filename
+            "أدخل كلمة مرور حذف الملف:\n" +
+            filename
         );
 
         if (password === null) {
+
             return false;
         }
 
-        const form = event.target;
 
-        let input = form.querySelector(
-            'input[name="password"]'
-        );
+        let input =
+            form.querySelector(
+                'input[name="password"]'
+            );
+
 
         if (!input) {
 
-            input = document.createElement("input");
+            input =
+                document.createElement(
+                    "input"
+                );
 
             input.type = "hidden";
 
             input.name = "password";
 
-            form.appendChild(input);
+            form.appendChild(
+                input
+            );
         }
+
 
         input.value = password;
 
@@ -1640,36 +2131,50 @@
     }
 
 
-    // ========================================================
-    // منع إرسال نموذج النشر بدون ZIP
-    // ========================================================
+    // =========================================================
+    // Publish Update Validation
+    // =========================================================
 
     document.addEventListener(
         "DOMContentLoaded",
         function () {
 
             const publishForm =
-                document.querySelector(
-                    'form[action$="/publish-update"]'
+                document.getElementById(
+                    "publishUpdateForm"
                 );
 
             if (!publishForm) {
+
                 return;
             }
+
+
+            const versionInput =
+                document.getElementById(
+                    "version"
+                );
+
+
+            const fileInput =
+                document.getElementById(
+                    "update_file"
+                );
+
+
+            const publishButton =
+                document.getElementById(
+                    "publishButton"
+                );
+
 
             publishForm.addEventListener(
                 "submit",
                 function (event) {
 
-                    const versionInput =
-                        document.getElementById(
-                            "version"
-                        );
-
-                    const fileInput =
-                        document.getElementById(
-                            "update_file"
-                        );
+                    // -----------------------------------------
+                    // Version
+                    // -----------------------------------------
 
                     if (
                         !versionInput ||
@@ -1686,13 +2191,18 @@
                     }
 
 
+                    // -----------------------------------------
+                    // File
+                    // -----------------------------------------
+
                     if (
                         !fileInput ||
+                        !fileInput.files ||
                         !fileInput.files.length
                     ) {
 
                         alert(
-                            "يرجى اختيار ملف ZIP للتحديث."
+                            "يرجى اختيار ملف Devspark_Setup.exe."
                         );
 
                         event.preventDefault();
@@ -1704,14 +2214,20 @@
                     const file =
                         fileInput.files[0];
 
+
+                    // -----------------------------------------
+                    // EXE only
+                    // -----------------------------------------
+
                     if (
                         !file.name
                             .toLowerCase()
-                            .endsWith(".zip")
+                            .endsWith(".exe")
                     ) {
 
                         alert(
-                            "ملف التحديث يجب أن يكون ZIP."
+                            "ملف التحديث يجب أن يكون EXE فقط.\n\n" +
+                            "اختر Devspark_Setup.exe."
                         );
 
                         event.preventDefault();
@@ -1720,21 +2236,115 @@
                     }
 
 
+                    // -----------------------------------------
+                    // Filename warning
+                    // -----------------------------------------
+
+                    if (
+                        file.name.toLowerCase() !==
+                        "devspark_setup.exe"
+                    ) {
+
+                        const continueUpload =
+                            confirm(
+                                "اسم الملف المحدد هو:\n\n" +
+                                file.name +
+                                "\n\n" +
+                                "سيقوم الخادم بحفظه رسميًا باسم:\n\n" +
+                                "Devspark_Setup.exe\n\n" +
+                                "هل تريد المتابعة؟"
+                            );
+
+                        if (!continueUpload) {
+
+                            event.preventDefault();
+
+                            return;
+                        }
+                    }
+
+
+                    // -----------------------------------------
+                    // Final confirmation
+                    // -----------------------------------------
+
                     const confirmed =
                         confirm(
                             "هل تريد نشر الإصدار " +
                             versionInput.value.trim() +
-                            "؟"
+                            "؟\n\n" +
+                            "سيتم نشر:\n" +
+                            "Devspark_Setup.exe\n\n" +
+                            "وسيتم إنشاء SHA-256 وManifest تلقائيًا."
                         );
+
 
                     if (!confirmed) {
 
                         event.preventDefault();
 
+                        return;
+                    }
+
+
+                    // -----------------------------------------
+                    // Prevent double submit
+                    // -----------------------------------------
+
+                    if (publishButton) {
+
+                        publishButton.disabled =
+                            true;
+
+                        publishButton.textContent =
+                            "⏳ جاري نشر التحديث...";
                     }
 
                 }
             );
+
+
+            // =================================================
+            // Show selected filename
+            // =================================================
+
+            if (fileInput) {
+
+                fileInput.addEventListener(
+                    "change",
+                    function () {
+
+                        if (
+                            !fileInput.files ||
+                            !fileInput.files.length
+                        ) {
+
+                            return;
+                        }
+
+
+                        const file =
+                            fileInput.files[0];
+
+
+                        if (
+                            file.name
+                                .toLowerCase()
+                                .endsWith(".exe")
+                        ) {
+
+                            console.log(
+                                "[DEVSPARK UPDATE] " +
+                                "Selected Setup: " +
+                                file.name
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
 
         }
     );
@@ -1742,4 +2352,5 @@
 </script>
 
 </body>
+
 </html>
