@@ -1,6 +1,5 @@
+```python
 from flask import Flask
-
-from config import *
 
 # ============================================================
 # Routes
@@ -16,7 +15,9 @@ from routes.user.main_routes import main
 
 app = Flask(__name__)
 
-app.config.from_object("config")
+# ============================================================
+# Session Secret Key
+# ============================================================
 
 app.secret_key = "ThisIsASecretKeyForSessions123!"
 
@@ -43,4 +44,9 @@ app.register_blueprint(
 # ============================================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=False
+    )
+```
