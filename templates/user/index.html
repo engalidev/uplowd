@@ -1,1 +1,267 @@
+{% extends "user/base.html" %}
 
+{% block title %}Devspark ERP - الصفحة الرئيسية{% endblock %}
+
+{% block head %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, #111827, #1f2937);
+        color: #ffffff;
+        border-radius: 20px;
+        padding: 55px 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .hero-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border-radius: 20px;
+        background: #ffffff;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        font-weight: 800;
+    }
+
+    .hero h1 {
+        margin: 0 0 15px;
+        font-size: 34px;
+        font-weight: 800;
+    }
+
+    .hero p {
+        margin: 0 auto;
+        max-width: 700px;
+        color: #d1d5db;
+        font-size: 17px;
+        line-height: 1.9;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 30px;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 170px;
+        padding: 13px 22px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #ffffff;
+        color: #111827;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        background: #f3f4f6;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.18);
+        transform: translateY(-2px);
+    }
+
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-icon {
+        width: 55px;
+        height: 55px;
+        margin: 0 auto 15px;
+        border-radius: 14px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 25px;
+    }
+
+    .card h3 {
+        margin: 0 0 10px;
+        color: #111827;
+        font-size: 19px;
+    }
+
+    .card p {
+        margin: 0;
+        color: #6b7280;
+        line-height: 1.8;
+        font-size: 14px;
+    }
+
+    .status {
+        margin-top: 25px;
+        padding: 18px 20px;
+        border-radius: 14px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    @media (max-width: 800px) {
+        .cards {
+            grid-template-columns: 1fr;
+        }
+
+        .hero {
+            padding: 40px 20px;
+        }
+
+        .hero h1 {
+            font-size: 27px;
+        }
+
+        .hero p {
+            font-size: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-logo">
+        D
+    </div>
+
+    <h1>
+        Devspark ERP
+    </h1>
+
+    <p>
+        منصة Devspark الرسمية لإدارة البرنامج والتحديثات.
+        يمكنك من هنا متابعة أحدث إصدار وتحميل آخر تحديث للبرنامج بسهولة.
+    </p>
+
+    <div class="actions">
+
+        <a href="{{ url_for('main.dashboard') }}"
+           class="btn btn-primary">
+            لوحة البرنامج
+        </a>
+
+        {% if manifest and manifest.get("packageUrl") %}
+            <a href="{{ manifest.get('packageUrl') }}"
+               class="btn btn-secondary">
+                تحميل آخر إصدار
+            </a>
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<section class="cards">
+
+    <div class="card">
+
+        <div class="card-icon">
+            📦
+        </div>
+
+        <h3>
+            آخر إصدار
+        </h3>
+
+        <p>
+            تابع أحدث نسخة متوفرة من برنامج Devspark ERP
+            واحصل على التحديثات الجديدة.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-icon">
+            🔄
+        </div>
+
+        <h3>
+            التحديثات
+        </h3>
+
+        <p>
+            يتم نشر تحديثات البرنامج من خلال خادم Devspark
+            لتوفير أحدث إصدار للمستخدمين.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="card-icon">
+            🛡️
+        </div>
+
+        <h3>
+            خدمة مستقرة
+        </h3>
+
+        <p>
+            خدمة مخصصة لتوفير ملفات البرنامج والتحديثات
+            بطريقة منظمة وآمنة.
+        </p>
+
+    </div>
+
+</section>
+
+
+{% if manifest %}
+
+<div class="status">
+
+    {% if manifest.get("version") %}
+        الإصدار الحالي المتوفر:
+        <strong>{{ manifest.get("version") }}</strong>
+    {% else %}
+        لا يوجد إصدار منشور حالياً.
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+{% endblock %}
