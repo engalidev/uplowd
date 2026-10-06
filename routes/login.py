@@ -1,24 +1,19 @@
 # ============================================================
-# routes/login.py
-# Devspark ERP Update Server
-#
-# مسؤول عن:
-#
-# /login
-# /logout
-#
+# login.py
+# Devspark ERP - Admin Authentication
 # ============================================================
 
+import os
 from functools import wraps
 
 from flask import (
     Blueprint,
+    flash,
+    redirect,
     render_template,
     request,
-    redirect,
-    url_for,
     session,
-    flash,
+    url_for,
 )
 
 
@@ -33,60 +28,49 @@ login_bp = Blueprint(
 
 
 # ============================================================
-# Admin Credentials
+# Admin credentials
 # ============================================================
 
-ADMIN_USERNAME = "beatacode"
+ADMIN_USERNAME = os.environ.get(
+    "ADMIN_USERNAME",
+    "beatacode"
+)
 
-ADMIN_PASSWORD = "ali199782"
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD",
+    "ali199782"
+)
 
 
 # ============================================================
-# Authentication
+# Authentication decorator
 # ============================================================
 
-def is_admin_logged_in():
+def admin_required(view):
     """
-    التحقق من تسجيل دخول المدير.
+    حماية صفحات الإدارة.
+
+    إذا لم يكن الأدمن مسجل الدخول:
+        يتم تحويله إلى صفحة تسجيل الدخول.
     """
 
-    return (
-        session.get(
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+
+        if not session.get(
             "admin_logged_in",
             False
-        )
-        is True
-    )
-
-
-def admin_required(view_function):
-    """
-    حماية Routes الإدارة.
-    """
-
-    @wraps(view_function)
-    def wrapped_view(
-        *args,
-        **kwargs
-    ):
-
-        if not is_admin_logged_in():
-
-            next_url = request.path
-
+        ):
             return redirect(
-                url_for(
-                    "login.login",
-                    next=next_url
-                )
+                url_for("login.login")
             )
 
-        return view_function(
+        return view(
             *args,
             **kwargs
         )
 
-    return wrapped_view
+    return wrapped
 
 
 # ============================================================
@@ -99,108 +83,46 @@ def admin_required(view_function):
 )
 def login():
 
-    # --------------------------------------------------------
-    # إذا كان مسجل الدخول مسبقًا
-    # --------------------------------------------------------
-
-    if is_admin_logged_in():
-
+    if session.get(
+        "admin_logged_in",
+        False
+    ):
         return redirect(
-            url_for(
-                "admin.dashboard"
-            )
+            url_for("admin.dashboard")
         )
-
-    # --------------------------------------------------------
-    # POST
-    # --------------------------------------------------------
 
     if request.method == "POST":
 
-        username = (
-            request.form.get(
-                "username",
-                ""
-            )
-            .strip()
-        )
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
 
         password = request.form.get(
             "password",
             ""
         )
 
-        # ----------------------------------------------------
-        # التحقق
-        # ----------------------------------------------------
-
         if (
             username == ADMIN_USERNAME
-            and
-            password == ADMIN_PASSWORD
+            and password == ADMIN_PASSWORD
         ):
-
-            # ------------------------------------------------
-            # تنظيف Session القديمة
-            # ------------------------------------------------
 
             session.clear()
 
-            # ------------------------------------------------
-            # إنشاء جلسة الإدارة
-            # ------------------------------------------------
-
             session["admin_logged_in"] = True
-
-            session["admin_username"] = (
-                ADMIN_USERNAME
-            )
-
-            # ------------------------------------------------
-            # إعادة المستخدم للصفحة المطلوبة
-            # ------------------------------------------------
-
-            next_url = request.args.get(
-                "next",
-                ""
-            )
-
-            if (
-                next_url
-                and
-                next_url.startswith("/")
-                and
-                not next_url.startswith("//")
-            ):
-
-                return redirect(
-                    next_url
-                )
+            session["admin_username"] = username
 
             return redirect(
-                url_for(
-                    "admin.dashboard"
-                )
+                url_for("admin.dashboard")
             )
-
-        # ----------------------------------------------------
-        # فشل الدخول
-        # ----------------------------------------------------
 
         flash(
             "❌ اسم المستخدم أو كلمة المرور غير صحيحة."
         )
 
-        return render_template(
-            "login.html"
-        ), 401
-
-    # --------------------------------------------------------
-    # GET
-    # --------------------------------------------------------
-
     return render_template(
-        "login.html"
+        "admin_login.html"
     )
 
 
@@ -208,20 +130,15 @@ def login():
 # Logout
 # ============================================================
 
-@login_bp.route(
-    "/logout",
-    methods=["GET", "POST"]
-)
+@login_bp.route("/logout")
 def logout():
 
     session.clear()
 
     flash(
-        "👋 تم تسجيل الخروج من لوحة الإدارة."
+        "تم تسجيل الخروج بنجاح."
     )
 
     return redirect(
-        url_for(
-            "login.login"
-        )
+        url_for("login.login")
     )
