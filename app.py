@@ -1,6 +1,7 @@
+```python
 from flask import Flask
+
 from config import *
-from models import db, Admin
 
 # ============================================================
 # Routes
@@ -22,13 +23,6 @@ app.secret_key = "ThisIsASecretKeyForSessions123!"
 
 
 # ============================================================
-# Database
-# ============================================================
-
-db.init_app(app)
-
-
-# ============================================================
 # User Routes
 # ============================================================
 
@@ -46,30 +40,9 @@ app.register_blueprint(
 
 
 # ============================================================
-# Database Initialization
-# ============================================================
-
-with app.app_context():
-
-    db.create_all()
-
-    # إنشاء المدير الافتراضي إذا لم يكن موجودًا
-    if not Admin.query.first():
-
-        default_admin = Admin(
-            username="admin",
-            password="1234"
-        )
-
-        db.session.add(default_admin)
-        db.session.commit()
-
-        print("Admin Created")
-
-
-# ============================================================
 # Run
 # ============================================================
 
 if __name__ == "__main__":
     app.run(debug=True)
+```
