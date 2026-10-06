@@ -14,6 +14,7 @@ import re
 import json
 import uuid
 import hashlib
+import shutil
 
 from datetime import datetime, timezone
 
@@ -59,18 +60,17 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Devspark Update Server
 # ============================================================
 
-# مهم جدًا:
+# رابط السيرفر العام.
 #
-# Devspark Updater يشترط HTTPS.
-#
-# مثال Railway:
-#
-# https://uplowd-production.up.railway.app
-#
-# ويمكن تغييره من Railway Environment Variables:
+# يمكن تغييره من Railway Environment Variables:
 #
 # PUBLIC_BASE_URL
 #
+# مثال:
+#
+# https://uplowd-production.up.railway.app
+#
+
 PUBLIC_BASE_URL = os.environ.get(
     "PUBLIC_BASE_URL",
     "https://uplowd-production.up.railway.app"
@@ -86,7 +86,7 @@ DEFAULT_PRODUCT = "Devspark ERP"
 # Update Package Rules
 # ============================================================
 
-# النظام الجديد يعتمد على:
+# النظام الرسمي للتحديث يعتمد على:
 #
 #     Devspark_Setup.exe
 #
@@ -95,10 +95,10 @@ DEFAULT_PRODUCT = "Devspark ERP"
 #     ZIP
 #     RAR
 #     MSI
-#     Manifest جانبي
 #
-# لذلك النشر الرسمي للتحديث يسمح بـ EXE فقط.
+# لذلك /publish-update يقبل EXE فقط.
 #
+
 UPDATE_EXTENSION = ".exe"
 
 SETUP_FILENAME = "Devspark_Setup.exe"
@@ -108,10 +108,11 @@ SETUP_FILENAME = "Devspark_Setup.exe"
 # General Upload Rules
 # ============================================================
 
-# هذه الامتدادات يمكن رفعها من صفحة الإدارة العامة.
+# صفحة الرفع العامة يمكنها استقبال هذه الملفات.
 #
-# لكن /publish-update يقبل EXE فقط.
+# أما /publish-update فهو EXE فقط.
 #
+
 ALLOWED_EXTENSIONS = {
     ".exe",
     ".setup",
@@ -122,7 +123,7 @@ ALLOWED_EXTENSIONS = {
 
 
 # ============================================================
-# Helpers
+# Logging
 # ============================================================
 
 def log(message):
@@ -136,6 +137,10 @@ def log(message):
         flush=True
     )
 
+
+# ============================================================
+# General Helpers
+# ============================================================
 
 def allowed_file(filename):
     """
@@ -195,7 +200,7 @@ def normalize_version(
     default="0.0.0"
 ):
     """
-    تحويل الإصدار إلى:
+    تحويل الإصدار إلى صيغة:
 
         1.0.0
 
@@ -250,6 +255,7 @@ def parse_version(
     )
 
     if not normalized:
+
         raise ValueError(
             f"رقم الإصدار في {field_name} غير صالح."
         )
@@ -280,6 +286,7 @@ def sanitize_program_name(
     )
 
     if not program_name:
+
         program_name = DEFAULT_PROGRAM
 
     program_name = secure_filename(
@@ -287,6 +294,7 @@ def sanitize_program_name(
     )
 
     if not program_name:
+
         program_name = DEFAULT_PROGRAM
 
     return program_name
@@ -381,6 +389,9 @@ def save_manifest(
 ):
     """
     حفظ Manifest بطريقة آمنة.
+
+    يتم أولًا إنشاء ملف مؤقت،
+    ثم استبدال manifest.json ذريًا.
     """
 
     manifest_path = get_manifest_path(
@@ -409,6 +420,15 @@ def save_manifest(
                 indent=2
             )
 
+            f.flush()
+
+            try:
+                os.fsync(
+                    f.fileno()
+                )
+            except Exception:
+                pass
+
         os.replace(
             temp_path,
             manifest_path
@@ -417,12 +437,14 @@ def save_manifest(
     except Exception:
 
         try:
+
             if os.path.exists(
                 temp_path
             ):
                 os.remove(
                     temp_path
                 )
+
         except Exception:
             pass
 
@@ -435,11 +457,6 @@ def build_download_url(
 ):
     """
     إنشاء رابط HTTPS للتحميل.
-
-    مثال:
-
-    https://uplowd-production.up.railway.app/
-    download/Devspark/Devspark_Setup.exe
     """
 
     program_name = sanitize_program_name(
@@ -481,11 +498,10 @@ def validate_setup_filename(
     """
     التحقق من اسم ملف Setup.
 
-    الاسم المفضل:
+    النظام الرسمي يسمح بأي اسم EXE أثناء الرفع،
+    لكن الخادم سيعيد تسميته إلى:
 
         Devspark_Setup.exe
-
-    ونسمح فقط بـ EXE.
     """
 
     if not filename:
@@ -495,12 +511,9 @@ def validate_setup_filename(
         filename
     )
 
-    if not filename.lower().endswith(
+    return filename.lower().endswith(
         UPDATE_EXTENSION
-    ):
-        return False
-
-    return True
+    )
 
 
 def remove_file_safely(
@@ -512,9 +525,14 @@ def remove_file_safely(
 
     try:
 
-        if file_path and os.path.isfile(
+        if (
             file_path
+            and
+            os.path.isfile(
+                file_path
+            )
         ):
+
             os.remove(
                 file_path
             )
@@ -530,6 +548,47 @@ def remove_file_safely(
             "WARNING: Could not delete file: "
             + str(ex)
         )
+
+
+def create_temp_path(
+    folder,
+    prefix,
+    extension=""
+):
+    """
+    إنشاء مسار ملف مؤقت داخل مجلد البرنامج.
+    """
+
+    return os.path.join(
+        folder,
+        (
+            "."
+            + prefix
+            + "_"
+            + uuid.uuid4().hex
+            + extension
+        )
+    )
+
+
+def safe_replace_file(
+    source_path,
+    destination_path
+):
+    """
+    استبدال ملف بطريقة آمنة قدر الإمكان.
+
+    source_path:
+        الملف الجديد.
+
+    destination_path:
+        الملف النهائي.
+    """
+
+    os.replace(
+        source_path,
+        destination_path
+    )
 
 
 # ============================================================
@@ -625,6 +684,10 @@ def index():
                 + str(ex)
             )
 
+            remove_file_safely(
+                file_path
+            )
+
             flash(
                 f"❌ فشل رفع الملف: {ex}"
             )
@@ -705,6 +768,9 @@ def index():
                 if filename.lower() == "manifest.json":
                     continue
 
+                if filename.startswith("."):
+                    continue
+
                 full_path = os.path.join(
                     prog_path,
                     filename
@@ -713,6 +779,7 @@ def index():
                 if os.path.isfile(
                     full_path
                 ):
+
                     files.append(
                         filename
                     )
@@ -755,7 +822,11 @@ def download_file(
     )
 
     if not filename:
-        return "Invalid filename.", 400
+
+        return (
+            "Invalid filename.",
+            400
+        )
 
     program_folder = os.path.join(
         app.config["UPLOAD_FOLDER"],
@@ -765,7 +836,11 @@ def download_file(
     if not os.path.isdir(
         program_folder
     ):
-        return "Program not found.", 404
+
+        return (
+            "Program not found.",
+            404
+        )
 
     full_path = os.path.join(
         program_folder,
@@ -775,7 +850,11 @@ def download_file(
     if not os.path.isfile(
         full_path
     ):
-        return "File not found.", 404
+
+        return (
+            "File not found.",
+            404
+        )
 
     log(
         "Download requested: "
@@ -1069,12 +1148,12 @@ def publish_update():
     # EXE ONLY
     # --------------------------------------------------------
 
-    if not original_filename.lower().endswith(
-        ".exe"
+    if not validate_setup_filename(
+        original_filename
     ):
 
         flash(
-            "❌ ملف التحديث يجب أن يكون EXE."
+            "❌ ملف التحديث يجب أن يكون EXE فقط."
         )
 
         return redirect(
@@ -1096,6 +1175,8 @@ def publish_update():
     current_manifest = load_manifest(
         program_name
     )
+
+    current_version_text = "0.0.0"
 
     if current_manifest:
 
@@ -1149,9 +1230,7 @@ def publish_update():
     #
     #     Devspark_Setup.exe
     #
-    # هو الاسم الرسمي الذي سيستخدمه الخادم.
-    #
-    # هذا يجعل USB والتحميل الإلكتروني متطابقين.
+    # هو الاسم الرسمي على السيرفر.
     #
     # --------------------------------------------------------
 
@@ -1162,67 +1241,54 @@ def publish_update():
         filename
     )
 
+    # --------------------------------------------------------
+    # Temporary Setup Path
+    # --------------------------------------------------------
+    #
+    # لا نستبدل الملف القديم مباشرة.
+    #
+    # أولًا نحفظ الجديد في ملف مؤقت.
+    #
+    # إذا نجح كل شيء:
+    #
+    #     temp -> Devspark_Setup.exe
+    #
+    # --------------------------------------------------------
+
+    temp_setup_path = create_temp_path(
+        program_folder,
+        "setup",
+        ".exe"
+    )
+
     log(
-        "Published setup filename: "
-        + filename
+        "Temporary setup path: "
+        + temp_setup_path
     )
 
     # --------------------------------------------------------
-    # Remove previous setup if exists
-    # --------------------------------------------------------
-
-    if os.path.isfile(
-        file_path
-    ):
-
-        try:
-
-            os.remove(
-                file_path
-            )
-
-            log(
-                "Previous Devspark_Setup.exe removed."
-            )
-
-        except Exception as ex:
-
-            log(
-                "ERROR: Could not replace previous setup: "
-                + str(ex)
-            )
-
-            flash(
-                "❌ تعذر استبدال Devspark_Setup.exe القديم."
-            )
-
-            return redirect(
-                url_for("index")
-            )
-
-    # --------------------------------------------------------
-    # Save Setup EXE
+    # Save Uploaded Setup
     # --------------------------------------------------------
 
     try:
 
         file.save(
-            file_path
+            temp_setup_path
         )
 
         log(
-            "Setup EXE saved successfully."
+            "Temporary Setup EXE saved successfully."
         )
 
     except Exception as ex:
 
-        log(
-            "ERROR: Failed to save setup EXE: "
-            + str(ex)
+        remove_file_safely(
+            temp_setup_path
         )
 
-        remove_file_safely(
-            file_path
+        log(
+            "ERROR: Failed to save temporary setup: "
+            + str(ex)
         )
 
         flash(
@@ -1234,35 +1300,19 @@ def publish_update():
         )
 
     # --------------------------------------------------------
-    # Validate Setup Exists
+    # Validate Temporary Setup Exists
     # --------------------------------------------------------
 
     if not os.path.isfile(
-        file_path
-    ):
-
-        flash(
-            "❌ لم يتم إنشاء Devspark_Setup.exe."
-        )
-
-        return redirect(
-            url_for("index")
-        )
-
-    # --------------------------------------------------------
-    # Validate Extension
-    # --------------------------------------------------------
-
-    if not validate_setup_filename(
-        filename
+        temp_setup_path
     ):
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
-            "❌ اسم ملف Setup غير صالح."
+            "❌ لم يتم إنشاء ملف التحديث المؤقت."
         )
 
         return redirect(
@@ -1276,7 +1326,7 @@ def publish_update():
     try:
 
         file_size = get_file_size(
-            file_path
+            temp_setup_path
         )
 
         log(
@@ -1300,7 +1350,7 @@ def publish_update():
     except Exception as ex:
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1318,7 +1368,7 @@ def publish_update():
     try:
 
         sha256 = calculate_sha256(
-            file_path
+            temp_setup_path
         )
 
         log(
@@ -1329,11 +1379,32 @@ def publish_update():
     except Exception as ex:
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
             f"❌ فشل حساب SHA-256: {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # SHA-256 Validation
+    # --------------------------------------------------------
+
+    if not re.fullmatch(
+        r"[a-fA-F0-9]{64}",
+        sha256
+    ):
+
+        remove_file_safely(
+            temp_setup_path
+        )
+
+        flash(
+            "❌ SHA-256 الناتج غير صالح."
         )
 
         return redirect(
@@ -1359,7 +1430,7 @@ def publish_update():
     ):
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1380,15 +1451,6 @@ def publish_update():
 
     # --------------------------------------------------------
     # Manifest
-    # --------------------------------------------------------
-    #
-    # هذا هو الـ Manifest الذي سيقرأه:
-    #
-    # DevsparkUpdateService
-    #
-    # والمهم أن package / packageUrl / fileName
-    # أصبحت تشير إلى EXE وليس ZIP.
-    #
     # --------------------------------------------------------
 
     manifest_data = {
@@ -1437,7 +1499,7 @@ def publish_update():
     }
 
     # --------------------------------------------------------
-    # Validate Manifest Before Saving
+    # Validate Manifest
     # --------------------------------------------------------
 
     if not manifest_data["package"].lower().endswith(
@@ -1445,7 +1507,7 @@ def publish_update():
     ):
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1461,7 +1523,7 @@ def publish_update():
     ):
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1475,7 +1537,7 @@ def publish_update():
     if manifest_data["size"] <= 0:
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1492,7 +1554,7 @@ def publish_update():
     ):
 
         remove_file_safely(
-            file_path
+            temp_setup_path
         )
 
         flash(
@@ -1504,8 +1566,144 @@ def publish_update():
         )
 
     # --------------------------------------------------------
+    # Backup Current Setup
+    # --------------------------------------------------------
+    #
+    # في حالة وجود إصدار قديم:
+    #
+    #     Devspark_Setup.exe
+    #
+    # نعيد تسميته مؤقتًا قبل نشر الجديد.
+    #
+    # إذا فشل النشر، نستطيع استعادته.
+    #
+    # --------------------------------------------------------
+
+    backup_setup_path = None
+
+    if os.path.isfile(
+        file_path
+    ):
+
+        backup_setup_path = create_temp_path(
+            program_folder,
+            "setup_backup",
+            ".exe"
+        )
+
+        try:
+
+            os.replace(
+                file_path,
+                backup_setup_path
+            )
+
+            log(
+                "Previous Devspark_Setup.exe moved to temporary backup."
+            )
+
+        except Exception as ex:
+
+            remove_file_safely(
+                temp_setup_path
+            )
+
+            log(
+                "ERROR: Could not backup previous setup: "
+                + str(ex)
+            )
+
+            flash(
+                "❌ تعذر تجهيز ملف Setup القديم للاستبدال."
+            )
+
+            return redirect(
+                url_for("index")
+            )
+
+    # --------------------------------------------------------
+    # Publish New Setup
+    # --------------------------------------------------------
+
+    try:
+
+        safe_replace_file(
+            temp_setup_path,
+            file_path
+        )
+
+        log(
+            "New Devspark_Setup.exe published successfully."
+        )
+
+    except Exception as ex:
+
+        log(
+            "ERROR: Failed to publish new Setup: "
+            + str(ex)
+        )
+
+        remove_file_safely(
+            temp_setup_path
+        )
+
+        # استعادة النسخة القديمة إن كانت موجودة.
+        if backup_setup_path:
+
+            try:
+
+                if os.path.isfile(
+                    backup_setup_path
+                ):
+
+                    os.replace(
+                        backup_setup_path,
+                        file_path
+                    )
+
+                    log(
+                        "Previous Setup restored."
+                    )
+
+            except Exception as restore_ex:
+
+                log(
+                    "CRITICAL: Failed to restore previous Setup: "
+                    + str(restore_ex)
+                )
+
+        flash(
+            f"❌ فشل نشر ملف التحديث: {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
     # Save Manifest
     # --------------------------------------------------------
+    #
+    # نحتفظ بنسخة من Manifest القديم في الذاكرة.
+    #
+    # إذا فشل الحفظ الجديد:
+    #
+    #     نحاول إعادة Setup القديم
+    #     ونحاول إعادة Manifest القديم
+    #
+    # حتى لا يصبح السيرفر في حالة غير متطابقة.
+    #
+    # --------------------------------------------------------
+
+    manifest_path = get_manifest_path(
+        program_name
+    )
+
+    old_manifest_exists = os.path.isfile(
+        manifest_path
+    )
+
+    old_manifest_data = current_manifest
 
     try:
 
@@ -1520,17 +1718,144 @@ def publish_update():
 
     except Exception as ex:
 
-        remove_file_safely(
-            file_path
-        )
-
         log(
             "ERROR: Failed to save manifest: "
             + str(ex)
         )
 
+        # ----------------------------------------------------
+        # محاولة استعادة Manifest القديم
+        # ----------------------------------------------------
+
+        try:
+
+            if old_manifest_exists and old_manifest_data:
+
+                save_manifest(
+                    old_manifest_data,
+                    program_name
+                )
+
+                log(
+                    "Previous manifest restored."
+                )
+
+            elif not old_manifest_exists:
+
+                if os.path.isfile(
+                    manifest_path
+                ):
+
+                    os.remove(
+                        manifest_path
+                    )
+
+                log(
+                    "New manifest removed because no previous manifest existed."
+                )
+
+        except Exception as manifest_restore_ex:
+
+            log(
+                "CRITICAL: Failed to restore previous manifest: "
+                + str(manifest_restore_ex)
+            )
+
+        # ----------------------------------------------------
+        # محاولة استعادة Setup القديم
+        # ----------------------------------------------------
+
+        try:
+
+            if os.path.isfile(
+                file_path
+            ):
+
+                os.remove(
+                    file_path
+                )
+
+            if backup_setup_path and os.path.isfile(
+                backup_setup_path
+            ):
+
+                os.replace(
+                    backup_setup_path,
+                    file_path
+                )
+
+                log(
+                    "Previous Setup restored after manifest failure."
+                )
+
+        except Exception as restore_ex:
+
+            log(
+                "CRITICAL: Failed to restore previous Setup after manifest failure: "
+                + str(restore_ex)
+            )
+
         flash(
             f"❌ فشل إنشاء manifest.json: {ex}"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # --------------------------------------------------------
+    # Delete Backup
+    # --------------------------------------------------------
+
+    if backup_setup_path:
+
+        remove_file_safely(
+            backup_setup_path
+        )
+
+        log(
+            "Previous Setup backup removed."
+        )
+
+    # --------------------------------------------------------
+    # Final Verification
+    # --------------------------------------------------------
+
+    try:
+
+        final_size = get_file_size(
+            file_path
+        )
+
+        final_sha256 = calculate_sha256(
+            file_path
+        )
+
+        if final_size != file_size:
+
+            raise ValueError(
+                "حجم الملف المنشور لا يطابق الحجم المحسوب."
+            )
+
+        if final_sha256.lower() != sha256.lower():
+
+            raise ValueError(
+                "SHA-256 للملف المنشور لا يطابق القيمة المحسوبة."
+            )
+
+        log(
+            "Final Setup verification passed."
+        )
+
+    except Exception as ex:
+
+        log(
+            "CRITICAL: Final Setup verification failed: "
+            + str(ex)
+        )
+
+        flash(
+            "⚠️ تم نشر التحديث ولكن فشل التحقق النهائي من الملف."
         )
 
         return redirect(
@@ -1546,8 +1871,18 @@ def publish_update():
     )
 
     log(
+        "Program: "
+        + program_name
+    )
+
+    log(
         "Version: "
         + release_version
+    )
+
+    log(
+        "Previous Version: "
+        + current_version_text
     )
 
     log(
@@ -1660,7 +1995,7 @@ def manifest():
     )
 
     # --------------------------------------------------------
-    # Force HTTPS + current download URL
+    # Force HTTPS + Current Download URL
     # --------------------------------------------------------
 
     filename = (
@@ -1701,8 +2036,8 @@ def manifest():
         ] = fixed_url
 
     # --------------------------------------------------------
-    # Extra safety:
-    # Never expose a ZIP as the official update package.
+    # Extra Safety:
+    # Official Update Package Must Be EXE
     # --------------------------------------------------------
 
     if filename and not filename.lower().endswith(
@@ -1741,6 +2076,38 @@ def manifest():
         fixed_manifest[
             "sha256"
         ] = ""
+
+    # --------------------------------------------------------
+    # Verify Published File Exists
+    # --------------------------------------------------------
+
+    if filename:
+
+        program_folder = get_program_folder(
+            program_name
+        )
+
+        published_file_path = os.path.join(
+            program_folder,
+            filename
+        )
+
+        if not os.path.isfile(
+            published_file_path
+        ):
+
+            log(
+                "WARNING: Manifest package does not exist on disk: "
+                + published_file_path
+            )
+
+            fixed_manifest[
+                "packageUrl"
+            ] = ""
+
+            fixed_manifest[
+                "downloadUrl"
+            ] = ""
 
     return jsonify(
         fixed_manifest
@@ -1837,6 +2204,38 @@ def latest_version(
             filename
         )
 
+        full_path = os.path.join(
+            program_folder,
+            filename
+        )
+
+        if not os.path.isfile(
+            full_path
+        ):
+
+            log(
+                "WARNING: Manifest points to missing file: "
+                + full_path
+            )
+
+            return jsonify({
+
+                "latest_version":
+                    current_manifest.get(
+                        "version",
+                        "0.0.0"
+                    ),
+
+                "download_url":
+                    "",
+
+                "sha256":
+                    "",
+
+                "size":
+                    0
+            })
+
         download_url = build_download_url(
             program_name,
             filename
@@ -1867,10 +2266,10 @@ def latest_version(
         })
 
     # --------------------------------------------------------
-    # Legacy fallback
+    # Legacy Fallback
     # --------------------------------------------------------
     #
-    # لا نبحث عن ZIP هنا.
+    # لا نبحث عن ZIP.
     #
     # نبحث فقط عن EXE يحمل إصدارًا.
     #
@@ -1908,6 +2307,9 @@ def latest_version(
     for filename in filenames:
 
         if filename.lower() == "manifest.json":
+            continue
+
+        if filename.startswith("."):
             continue
 
         if not filename.lower().endswith(
