@@ -1,4 +1,3 @@
-```python
 from flask import (
     Blueprint,
     render_template,
@@ -850,4 +849,4 @@ def health():
             "setup-exe"
 
     })
-```
+
