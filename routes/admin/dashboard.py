@@ -1,5 +1,10 @@
 
-from flask import render_template, redirect, url_for, session
+from flask import (
+    render_template,
+    redirect,
+    url_for,
+    session
+)
 
 from routes.admin import admin
 
@@ -11,11 +16,18 @@ from routes.admin import admin
 @admin.route("/dashboard")
 def dashboard():
 
-    # منع الدخول بدون تسجيل دخول
+    # ========================================================
+    # حماية لوحة الإدارة
+    # ========================================================
+
     if not session.get("admin_logged_in"):
         return redirect(
             url_for("admin.login")
         )
+
+    # ========================================================
+    # Dashboard
+    # ========================================================
 
     return render_template(
         "admin/admin_dashboard.html"
