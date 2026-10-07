@@ -56,11 +56,11 @@ PUBLIC_BASE_URL = os.environ.get(
 ).rstrip("/")
 
 
-DEFAULT_PROGRAM = "Devspark"
+DEFAULT_PROGRAM = "BETACODE"
 
-DEFAULT_PRODUCT = "Devspark ERP"
+DEFAULT_PRODUCT = "BETACODE ERP"
 
-SETUP_FILENAME = "Devspark_Setup.exe"
+SETUP_FILENAME = "BETACODE_Setup.exe"
 
 
 # ============================================================
@@ -832,7 +832,7 @@ def health():
             "ok",
 
         "service":
-            "Devspark Update Server",
+            "BETACODE Update Server",
 
         "time":
             datetime.now(
@@ -849,4 +849,3 @@ def health():
             "setup-exe"
 
     })
-
