@@ -1,69 +1,84 @@
 from flask import Flask
 import os
 
-
-# ============================================================
-# Routes
-# ============================================================
-
 from routes.admin import admin
 from routes.user.main import main
 
 
 # ============================================================
-# Flask Application
+# Flask App
 # ============================================================
 
 app = Flask(__name__)
-
-
-# ============================================================
-# Session Secret Key
-# ============================================================
 
 app.secret_key = "ThisIsASecretKeyForSessions123!"
 
 
 # ============================================================
-# Debug / Diagnostic Information
+# RAILWAY FILE SYSTEM DIAGNOSTIC
 # ============================================================
 
 print("")
-print("=" * 70)
-print("DEVSPARK FLASK STARTUP DIAGNOSTIC")
-print("=" * 70)
-
-# ------------------------------------------------------------
-# Current Working Directory
-# ------------------------------------------------------------
+print("=" * 80)
+print("DEVSPARK RAILWAY FILE SYSTEM DIAGNOSTIC")
+print("=" * 80)
 
 print("")
 print("[1] Current Working Directory:")
 print(os.getcwd())
 
-# ------------------------------------------------------------
-# Python File Location
-# ------------------------------------------------------------
-
 print("")
 print("[2] app.py Location:")
 print(os.path.abspath(__file__))
 
-# ------------------------------------------------------------
-# Application Root Path
-# ------------------------------------------------------------
-
 print("")
-print("[3] Flask app.root_path:")
+print("[3] Flask Root Path:")
 print(app.root_path)
-
-# ------------------------------------------------------------
-# Template Folder
-# ------------------------------------------------------------
 
 print("")
 print("[4] Flask Template Folder:")
 print(app.template_folder)
+
+
+# ============================================================
+# /app CONTENT
+# ============================================================
+
+print("")
+print("=" * 80)
+print("PROJECT ROOT CONTENT")
+print("=" * 80)
+
+try:
+
+    for item in sorted(os.listdir("/app")):
+
+        full_path = os.path.join(
+            "/app",
+            item
+        )
+
+        if os.path.isdir(full_path):
+            print(
+                "[DIR ]",
+                item
+            )
+        else:
+            print(
+                "[FILE]",
+                item
+            )
+
+except Exception as ex:
+
+    print("")
+    print("[ERROR] Cannot read /app")
+    print(repr(ex))
+
+
+# ============================================================
+# TEMPLATES DIRECTORY
+# ============================================================
 
 template_path = os.path.join(
     app.root_path,
@@ -71,97 +86,144 @@ template_path = os.path.join(
 )
 
 print("")
-print("[5] Full Template Path:")
-print(os.path.abspath(template_path))
+print("=" * 80)
+print("TEMPLATES DIRECTORY CHECK")
+print("=" * 80)
 
 print("")
-print("[6] Template Folder Exists:")
-print(os.path.exists(template_path))
-
-# ============================================================
-# Check Admin Templates
-# ============================================================
+print("[5] Template Path:")
+print(
+    os.path.abspath(template_path)
+)
 
 print("")
-print("=" * 70)
-print("ADMIN TEMPLATE CHECK")
-print("=" * 70)
+print("[6] Template Directory Exists:")
 
-admin_template_folder = os.path.join(
+print(
+    os.path.isdir(template_path)
+)
+
+
+# ============================================================
+# ADMIN TEMPLATE DIRECTORY
+# ============================================================
+
+admin_template_path = os.path.join(
     template_path,
     "admin"
 )
 
 print("")
-print("[7] Admin Template Folder:")
-print(os.path.abspath(admin_template_folder))
+print("=" * 80)
+print("ADMIN TEMPLATE DIRECTORY CHECK")
+print("=" * 80)
 
 print("")
-print("[8] Admin Template Folder Exists:")
-print(os.path.exists(admin_template_folder))
+print("[7] Admin Template Path:")
+
+print(
+    os.path.abspath(
+        admin_template_path
+    )
+)
+
+print("")
+print("[8] Admin Directory Exists:")
+
+print(
+    os.path.isdir(
+        admin_template_path
+    )
+)
 
 
-# ------------------------------------------------------------
-# Admin Login Template
-# ------------------------------------------------------------
+# ============================================================
+# ADMIN LOGIN TEMPLATE
+# ============================================================
 
-admin_login_template = os.path.join(
-    admin_template_folder,
+admin_login_path = os.path.join(
+    admin_template_path,
     "admin_login.html"
 )
 
 print("")
-print("[9] Admin Login Template:")
-print(os.path.abspath(admin_login_template))
+print("=" * 80)
+print("ADMIN LOGIN TEMPLATE CHECK")
+print("=" * 80)
 
 print("")
-print("[10] Admin Login Template Exists:")
-print(os.path.isfile(admin_login_template))
+print("[9] Expected File:")
 
-
-# ------------------------------------------------------------
-# List Admin Templates
-# ------------------------------------------------------------
+print(
+    os.path.abspath(
+        admin_login_path
+    )
+)
 
 print("")
-print("[11] Admin Template Files:")
+print("[10] File Exists:")
 
-if os.path.isdir(admin_template_folder):
+print(
+    os.path.isfile(
+        admin_login_path
+    )
+)
+
+
+# ============================================================
+# LIST ADMIN TEMPLATES
+# ============================================================
+
+print("")
+print("=" * 80)
+print("ADMIN TEMPLATE FILES")
+print("=" * 80)
+
+if os.path.isdir(admin_template_path):
 
     try:
 
-        admin_files = os.listdir(
-            admin_template_folder
+        files = sorted(
+            os.listdir(
+                admin_template_path
+            )
         )
 
-        if admin_files:
+        if not files:
 
-            for filename in sorted(admin_files):
-
-                full_path = os.path.join(
-                    admin_template_folder,
-                    filename
-                )
-
-                print(
-                    "   - "
-                    + filename
-                    + " | "
-                    + (
-                        "FILE"
-                        if os.path.isfile(full_path)
-                        else "DIRECTORY"
-                    )
-                )
+            print("")
+            print(
+                "[ADMIN] Directory is EMPTY."
+            )
 
         else:
 
-            print("   (EMPTY)")
+            for filename in files:
+
+                full_path = os.path.join(
+                    admin_template_path,
+                    filename
+                )
+
+                if os.path.isfile(full_path):
+
+                    print(
+                        "[FILE]",
+                        filename
+                    )
+
+                elif os.path.isdir(full_path):
+
+                    print(
+                        "[DIR ]",
+                        filename
+                    )
 
     except Exception as ex:
 
+        print("")
         print(
-            "   ERROR READING FOLDER:"
+            "[ERROR] Cannot read admin templates."
         )
 
         print(
@@ -170,112 +232,139 @@ if os.path.isdir(admin_template_folder):
 
 else:
 
+    print("")
     print(
-        "   ADMIN TEMPLATE FOLDER DOES NOT EXIST!"
+        "[ERROR] templates/admin DOES NOT EXIST!"
     )
 
 
 # ============================================================
-# Check All Templates
+# ALL TEMPLATES RECURSIVELY
 # ============================================================
 
 print("")
-print("=" * 70)
-print("ALL TEMPLATE FILES")
-print("=" * 70)
+print("=" * 80)
+print("ALL TEMPLATE FILES RECURSIVELY")
+print("=" * 80)
 
 if os.path.isdir(template_path):
 
-    for root, dirs, files in os.walk(
-        template_path
-    ):
+    try:
 
-        for filename in sorted(files):
+        found_templates = False
 
-            full_path = os.path.join(
-                root,
-                filename
-            )
+        for root, dirs, files in os.walk(
+            template_path
+        ):
 
-            relative_path = os.path.relpath(
-                full_path,
-                template_path
-            )
+            for filename in sorted(files):
 
+                found_templates = True
+
+                full_path = os.path.join(
+                    root,
+                    filename
+                )
+
+                relative_path = os.path.relpath(
+                    full_path,
+                    template_path
+                )
+
+                print(
+                    "[TEMPLATE]",
+                    relative_path
+                )
+
+        if not found_templates:
+
+            print("")
             print(
-                "   - "
-                + relative_path
+                "[ERROR] No template files found!"
             )
+
+    except Exception as ex:
+
+        print("")
+        print(
+            "[ERROR] Failed to scan templates."
+        )
+
+        print(
+            repr(ex)
+        )
 
 else:
 
+    print("")
     print(
-        "   TEMPLATE DIRECTORY DOES NOT EXIST!"
+        "[ERROR] Template directory does not exist."
     )
 
 
 # ============================================================
-# Register User Routes
+# REGISTER BLUEPRINTS
 # ============================================================
 
-app.register_blueprint(
-    main
-)
+print("")
+print("=" * 80)
+print("REGISTERING BLUEPRINTS")
+print("=" * 80)
 
-
-# ============================================================
-# Register Admin Routes
-# ============================================================
+app.register_blueprint(main)
 
 app.register_blueprint(
     admin,
     url_prefix="/admin"
 )
 
+print("")
+print("[OK] Main blueprint registered.")
+
+print(
+    "[OK] Admin blueprint registered."
+)
+
 
 # ============================================================
-# Flask Registered Routes
+# ROUTES
 # ============================================================
 
 print("")
-print("=" * 70)
-print("REGISTERED FLASK ROUTES")
-print("=" * 70)
+print("=" * 80)
+print("REGISTERED ROUTES")
+print("=" * 80)
 
 for rule in sorted(
     app.url_map.iter_rules(),
     key=lambda x: str(x)
 ):
 
-    methods = sorted(
-        rule.methods
-    )
-
     print(
-        f"   {str(rule):<40} "
-        f"{methods}"
+        str(rule),
+        sorted(rule.methods)
     )
 
 
 # ============================================================
-# Final Diagnostic
+# FINAL RESULT
 # ============================================================
 
 print("")
-print("=" * 70)
-print("FINAL DIAGNOSTIC RESULT")
-print("=" * 70)
+print("=" * 80)
+print("FINAL TEMPLATE DIAGNOSTIC")
+print("=" * 80)
 
-if os.path.isfile(admin_login_template):
+if os.path.isfile(admin_login_path):
 
     print("")
     print(
-        "OK: admin_login.html EXISTS"
+        "SUCCESS: admin_login.html EXISTS IN RAILWAY."
     )
 
     print(
         os.path.abspath(
-            admin_login_template
+            admin_login_path
         )
     )
 
@@ -283,26 +372,29 @@ else:
 
     print("")
     print(
-        "ERROR: admin_login.html DOES NOT EXIST!"
+        "ERROR: admin_login.html DOES NOT EXIST IN RAILWAY."
+    )
+
+    print("")
+    print(
+        "Expected:"
     )
 
     print(
-        "Flask will NOT be able to render:"
-    )
-
-    print(
-        "admin/admin_login.html"
+        os.path.abspath(
+            admin_login_path
+        )
     )
 
 print("")
-print("=" * 70)
-print("DEVSPARK FLASK STARTUP COMPLETE")
-print("=" * 70)
+print("=" * 80)
+print("DEVSPARK RAILWAY DIAGNOSTIC COMPLETE")
+print("=" * 80)
 print("")
 
 
 # ============================================================
-# Run
+# LOCAL RUN
 # ============================================================
 
 if __name__ == "__main__":
