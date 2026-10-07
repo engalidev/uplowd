@@ -49,7 +49,7 @@ os.makedirs(
 
 
 # ============================================================
-# Devspark Update Server
+# BETACODE Update Server
 # ============================================================
 
 PUBLIC_BASE_URL = os.environ.get(
@@ -58,9 +58,9 @@ PUBLIC_BASE_URL = os.environ.get(
 ).rstrip("/")
 
 
-DEFAULT_PROGRAM = "Devspark"
+DEFAULT_PROGRAM = "BETACODE"
 
-DEFAULT_PRODUCT = "Devspark ERP"
+DEFAULT_PRODUCT = "BETACODE ERP"
 
 
 # ============================================================
@@ -69,7 +69,7 @@ DEFAULT_PRODUCT = "Devspark ERP"
 
 UPDATE_EXTENSION = ".exe"
 
-SETUP_FILENAME = "Devspark_Setup.exe"
+SETUP_FILENAME = "BETACODE_Setup.exe"
 
 
 # ============================================================
@@ -120,7 +120,7 @@ def log(message):
     """
 
     print(
-        "[DEVSPARK UPDATE SERVER] "
+        "[BETACODE UPDATE SERVER] "
         + str(message),
         flush=True
     )
@@ -869,7 +869,7 @@ def delete_file(
 
 
 # ============================================================
-# Publish Devspark Update
+# Publish BETACODE Update
 # ============================================================
 
 @admin.route(
@@ -1035,7 +1035,7 @@ def publish_update():
     if not file or not file.filename:
 
         flash(
-            "❌ يجب اختيار ملف Devspark_Setup.exe للتحديث.",
+            "❌ يجب اختيار ملف BETACODE_Setup.exe للتحديث.",
             "error"
         )
 
@@ -1172,7 +1172,7 @@ def publish_update():
         if file_size <= 0:
 
             raise ValueError(
-                "ملف Devspark_Setup.exe فارغ."
+                "ملف BETACODE_Setup.exe فارغ."
             )
 
         sha256 = calculate_sha256(
@@ -1594,7 +1594,7 @@ def publish_update():
     )
 
     flash(
-        f"🚀 تم نشر Devspark ERP بالإصدار {release_version} بنجاح.",
+        f"🚀 تم نشر BETACODE ERP بالإصدار {release_version} بنجاح.",
         "success"
     )
 
