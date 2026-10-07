@@ -11,17 +11,45 @@ from routes.admin import admin
 
 
 # ============================================================
+# Admin Home
+# /admin
+# ============================================================
+
+@admin.route("/")
+def admin_home():
+
+    # إذا كان المدير مسجل دخول
+    if session.get("admin_logged_in"):
+        return redirect(
+            url_for("admin.dashboard")
+        )
+
+    # إذا لم يكن مسجل دخول
+    return redirect(
+        url_for("admin.login")
+    )
+
+
+# ============================================================
 # Admin Login
+# /admin/login
 # ============================================================
 
 @admin.route("/login", methods=["GET", "POST"])
 def login():
 
+    # --------------------------------------------------------
     # إذا كان المدير مسجل دخول بالفعل
+    # --------------------------------------------------------
+
     if session.get("admin_logged_in"):
         return redirect(
             url_for("admin.dashboard")
         )
+
+    # --------------------------------------------------------
+    # معالجة تسجيل الدخول
+    # --------------------------------------------------------
 
     if request.method == "POST":
 
@@ -51,9 +79,11 @@ def login():
             and password == ADMIN_PASSWORD
         ):
 
+            # إنشاء جلسة المدير
             session["admin_logged_in"] = True
             session["admin_username"] = username
 
+            # الانتقال إلى لوحة التحكم
             return redirect(
                 url_for("admin.dashboard")
             )
@@ -67,6 +97,10 @@ def login():
             "error"
         )
 
+    # ========================================================
+    # Login Page
+    # ========================================================
+
     return render_template(
         "admin/admin_login.html"
     )
@@ -74,21 +108,25 @@ def login():
 
 # ============================================================
 # Admin Logout
+# /admin/logout
 # ============================================================
 
 @admin.route("/logout")
 def logout():
 
+    # حذف حالة تسجيل الدخول
     session.pop(
         "admin_logged_in",
         None
     )
 
+    # حذف اسم المستخدم
     session.pop(
         "admin_username",
         None
     )
 
+    # العودة إلى صفحة تسجيل الدخول
     return redirect(
         url_for("admin.login")
     )
