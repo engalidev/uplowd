@@ -1,1 +1,465 @@
+{% extends "admin/admin_base.html" %}
 
+
+{% block title %}
+    Devspark ERP - لوحة التحكم
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="page-header">
+
+    <div>
+
+        <h1 class="page-title">
+            لوحة التحكم
+        </h1>
+
+        <p class="page-description">
+            مرحباً بك في لوحة إدارة Devspark ERP
+        </p>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('admin.uploads') }}"
+        class="btn btn-primary">
+
+        📦 إدارة التحديثات
+
+    </a>
+
+</div>
+
+
+<!-- ========================================================
+     Statistics
+     ======================================================== -->
+
+<div style="
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                210px,
+                1fr
+            )
+        );
+    gap:16px;
+    margin-bottom:20px;
+">
+
+
+    <!-- Server -->
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        ">
+
+            <div>
+
+                <div style="
+                    color:#6b7280;
+                    font-size:12px;
+                    margin-bottom:7px;
+                ">
+                    حالة الخادم
+                </div>
+
+                <div style="
+                    font-size:20px;
+                    font-weight:800;
+                    color:#059669;
+                ">
+                    يعمل
+                </div>
+
+            </div>
+
+            <div style="
+                width:45px;
+                height:45px;
+                border-radius:12px;
+                background:#ecfdf5;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:21px;
+            ">
+                ✓
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Program -->
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        ">
+
+            <div>
+
+                <div style="
+                    color:#6b7280;
+                    font-size:12px;
+                    margin-bottom:7px;
+                ">
+                    البرنامج
+                </div>
+
+                <div style="
+                    font-size:20px;
+                    font-weight:800;
+                    color:#111827;
+                ">
+                    Devspark ERP
+                </div>
+
+            </div>
+
+            <div style="
+                width:45px;
+                height:45px;
+                border-radius:12px;
+                background:#eff6ff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:21px;
+            ">
+                💻
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Update -->
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        ">
+
+            <div>
+
+                <div style="
+                    color:#6b7280;
+                    font-size:12px;
+                    margin-bottom:7px;
+                ">
+                    آخر إصدار منشور
+                </div>
+
+                <div style="
+                    font-size:20px;
+                    font-weight:800;
+                    color:#111827;
+                ">
+
+                    {% if manifest %}
+                        {{ manifest.get(
+                            "version",
+                            "0.0.0"
+                        ) }}
+                    {% else %}
+                        0.0.0
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            <div style="
+                width:45px;
+                height:45px;
+                border-radius:12px;
+                background:#f5f3ff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:21px;
+            ">
+                🚀
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<!-- ========================================================
+     Main Cards
+     ======================================================== -->
+
+<div style="
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(
+                300px,
+                1fr
+            )
+        );
+    gap:20px;
+">
+
+
+    <!-- Update Management -->
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:15px;
+        ">
+
+            <div style="
+                width:45px;
+                height:45px;
+                border-radius:11px;
+                background:#eff6ff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:21px;
+            ">
+                📦
+            </div>
+
+            <div>
+
+                <h2 style="
+                    font-size:17px;
+                    margin-bottom:4px;
+                ">
+                    إدارة التحديثات
+                </h2>
+
+                <p style="
+                    color:#6b7280;
+                    font-size:12px;
+                ">
+                    رفع ونشر إصدارات Devspark
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <p style="
+            color:#6b7280;
+            font-size:13px;
+            line-height:1.8;
+            margin-bottom:18px;
+        ">
+
+            من هنا يمكنك رفع ملف التثبيت،
+            نشر إصدار جديد، إدارة الملفات
+            ومتابعة الإصدار المنشور حالياً.
+
+        </p>
+
+
+        <a
+            href="{{ url_for('admin.uploads') }}"
+            class="btn btn-primary">
+
+            فتح إدارة التحديثات
+
+        </a>
+
+    </div>
+
+
+    <!-- Current Release -->
+
+    <div class="card">
+
+        <div style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:15px;
+        ">
+
+            <div style="
+                width:45px;
+                height:45px;
+                border-radius:11px;
+                background:#ecfdf5;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-size:21px;
+            ">
+                🚀
+            </div>
+
+            <div>
+
+                <h2 style="
+                    font-size:17px;
+                    margin-bottom:4px;
+                ">
+                    الإصدار الحالي
+                </h2>
+
+                <p style="
+                    color:#6b7280;
+                    font-size:12px;
+                ">
+                    معلومات آخر تحديث
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if manifest %}
+
+            <div style="
+                display:grid;
+                gap:10px;
+            ">
+
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:15px;
+                    padding:10px;
+                    background:#f9fafb;
+                    border-radius:8px;
+                ">
+
+                    <span style="
+                        color:#6b7280;
+                        font-size:12px;
+                    ">
+                        الإصدار
+                    </span>
+
+                    <strong>
+                        {{ manifest.get(
+                            "version",
+                            "0.0.0"
+                        ) }}
+                    </strong>
+
+                </div>
+
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:15px;
+                    padding:10px;
+                    background:#f9fafb;
+                    border-radius:8px;
+                ">
+
+                    <span style="
+                        color:#6b7280;
+                        font-size:12px;
+                    ">
+                        الملف
+                    </span>
+
+                    <strong>
+                        {{ manifest.get(
+                            "fileName",
+                            "غير متوفر"
+                        ) }}
+                    </strong>
+
+                </div>
+
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    gap:15px;
+                    padding:10px;
+                    background:#f9fafb;
+                    border-radius:8px;
+                ">
+
+                    <span style="
+                        color:#6b7280;
+                        font-size:12px;
+                    ">
+                        الحجم
+                    </span>
+
+                    <strong>
+
+                        {% if manifest.get("size") %}
+                            {{ (
+                                manifest.get("size", 0)
+                                / 1024
+                                / 1024
+                            ) | round(2) }}
+                            MB
+                        {% else %}
+                            —
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+        {% else %}
+
+            <div style="
+                padding:20px;
+                text-align:center;
+                background:#f9fafb;
+                border-radius:9px;
+                color:#6b7280;
+                font-size:13px;
+            ">
+
+                لا يوجد إصدار منشور حالياً.
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}
