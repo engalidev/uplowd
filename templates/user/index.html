@@ -1,42 +1,95 @@
-{% extends "user/base.html" %}
-{% from "macros.html" import icon, program_card, empty %}
-{% block title %}{{ site_name }} — البرامج والتحديثات{% endblock %}
-{% block topbar_title %}الرئيسية{% endblock %}
-{% block content %}
-<section class="hero">
-  <h1>حمّل برامجك وأحدث إصداراتها من مكان واحد</h1>
-  <p>كل برنامج له صفحته وإصداراته وملاحظات التحديث، مع بصمة SHA-256 للتحقق من سلامة الملف قبل التثبيت.</p>
-  <div class="acts">
-    <a class="btn btn-primary btn-lg" href="{{ url_for('main.programs_page') }}">{{ icon('grid') }} تصفح البرامج</a>
-    <a class="btn btn-ghost btn-lg" href="{{ url_for('main.updates') }}">{{ icon('refresh') }} آخر التحديثات</a>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك</title>
+  <meta name="description" content="نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة وتسريع النمو.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="{{ url_for('main.index') }}"><i>β</i>BETACODE</a>
+    <nav class="links">
+      <a class="keep" href="#map">خريطة العراق</a>
+      <a href="{{ url_for('main.programs_page') }}">البرامج</a>
+      <a href="{{ url_for('main.updates') }}">سجل التحديثات</a>
+      <a href="{{ url_for('admin.login') }}">لوحة الإدارة</a>
+    </nav>
   </div>
-</section>
+</header>
 
-<div class="stats" style="margin-top:20px">
-  <div class="card stat"><div class="stat-ico">{{ icon('grid') }}</div><div><b>{{ stats.programs }}</b><span>برنامج متاح</span></div></div>
-  <div class="card stat"><div class="stat-ico">{{ icon('layers') }}</div><div><b>{{ stats.releases }}</b><span>إصدار منشور</span></div></div>
-  <div class="card stat"><div class="stat-ico">{{ icon('shield') }}</div><div><b>SHA-256</b><span>تحقق من كل ملف</span></div></div>
-</div>
+<main class="wrap">
 
-<div class="section-head"><h2>البرامج</h2><a href="{{ url_for('main.programs_page') }}">عرض الكل</a></div>
-{% if programs %}
-  <div class="pgrid">{% for p in programs %}{{ program_card(p, url_for('main.program_page', slug=p.slug)) }}{% endfor %}</div>
-{% else %}
-  {{ empty('package', 'لا توجد برامج بعد', 'ستظهر هنا البرامج بمجرد أن ينشرها المسؤول.') }}
-{% endif %}
-
-{% if recent %}
-<div class="section-head"><h2>آخر التحديثات</h2><a href="{{ url_for('main.updates') }}">السجل الكامل</a></div>
-<div class="tl">
-  {% for r in recent %}
-  <a class="tl-item" href="{{ url_for('main.program_page', slug=r.slug) }}">
-    <span class="pico sm c{{ r.color }}">{{ r.letter }}</span>
-    <div class="body">
-      <div class="top"><b>{{ r.programName }}</b><span class="badge badge-ver">v{{ r.version }}</span><span class="muted" style="font-size:12.5px">{{ r.releaseDate|fdate }}</span></div>
-      {% if r.releaseNotes %}<div class="notes">{{ r.releaseNotes|truncate(140) }}</div>{% endif %}
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="rev">
+      <span class="tag"><b></b> أنظمة حديثة · تحول رقمي</span>
+      <h1><span class="grad">BETACODE</span><small>حلول برمجية ذكية لمستقبل أعمالك</small></h1>
+      <p>نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة، وتسريع النمو، وتحقيق التحول الرقمي باحترافية.</p>
+      <div class="acts">
+        <a class="btn pri" href="{{ url_for('main.programs_page') }}">اكتشف خدماتنا ←</a>
+        <a class="btn" href="{{ url_for('main.updates') }}">آخر التحديثات</a>
+      </div>
+      <div class="stats">
+        <div><b class="grad">{{ stats.programs if stats else 0 }}</b><span>برنامج متاح</span></div>
+        <div><b class="grad">{{ stats.releases if stats else 0 }}</b><span>إصدار منشور</span></div>
+        <div><b class="grad">SHA-256</b><span>تحقق من كل ملف</span></div>
+      </div>
     </div>
-  </a>
-  {% endfor %}
-</div>
-{% endif %}
-{% endblock %}
+
+    <div class="mock rev" aria-hidden="true">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="mrow">
+        <div class="kpi"><small>Uptime</small><b>99.98%</b></div>
+        <div class="kpi"><small>Releases</small><b>{{ stats.releases if stats else 0 }}</b></div>
+        <div class="kpi"><small>Programs</small><b>{{ stats.programs if stats else 0 }}</b></div>
+      </div>
+      <div class="chart">
+        <svg viewBox="0 0 300 110" width="100%" height="100%" preserveAspectRatio="none">
+          <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0 90C30 80 45 40 80 55S130 95 160 60 215 15 245 35 285 20 300 10V110H0Z" fill="url(#cg)"/>
+          <path d="M0 90C30 80 45 40 80 55S130 95 160 60 215 15 245 35 285 20 300 10" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="code"><em>const</em> system = <u>"BETACODE ERP"</u>;<br><em>await</em> deploy(system, { secure: <em>true</em> });<br>// ✓ ready for growth</div>
+    </div>
+  </section>
+
+  <!-- ===== Iraq map ===== -->
+  <section class="map" id="map">
+    <div class="head">
+      <h2>العراق <span class="grad">بهويته وحضارته</span></h2>
+      <p>مرّر المؤشر فوق أي محافظة لاكتشاف رمزها التاريخي والحضاري.</p>
+    </div>
+    <div class="stage">
+      <div id="iraqMap"></div>
+      <aside class="card" id="govCard" aria-live="polite">
+        <div class="gico" id="govIcon"></div>
+        <h3 id="govName"></h3>
+        <div class="en" id="govEn"></div>
+        <span class="mark" id="govMark"></span>
+        <p id="govDesc"></p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="band">
+    <h2>جاهزون لنقل أعمالك إلى المستوى التالي</h2>
+    <p>تصفّح برامجنا وحمّل أحدث الإصدارات مع التحقق من سلامة كل ملف.</p>
+    <div class="acts"><a class="btn pri" href="{{ url_for('main.programs_page') }}">ابدأ الآن</a></div>
+  </section>
+</main>
+
+<footer>© {{ site_name or "BETACODE" }} — جميع الحقوق محفوظة</footer>
+
+<script src="{{ url_for('static', filename='js/iraq-map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/iraq-data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+</body>
+</html>
