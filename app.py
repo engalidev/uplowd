@@ -1,406 +1,117 @@
-from flask import Flask
+import hmac
 import os
+import secrets
+from datetime import datetime, timedelta
+
+from flask import Flask, abort, render_template, request, session
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from routes.admin import admin
-from routes.user.main import main
-
-
-# ============================================================
-# Flask App
-# ============================================================
+from routes.user import main as main_bp
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-app.secret_key = "ThisIsASecretKeyForSessions123!"
+# ---------------------------------------------------------------- Config
+secret = os.environ.get("SECRET_KEY")
+if not secret:
+    secret = secrets.token_hex(32)
+    print("[SECURITY] SECRET_KEY غير مضبوط. اضبطه في متغيرات البيئة "
+          "وإلا ستنتهي الجلسات عند كل إعادة تشغيل.", flush=True)
 
-
-# ============================================================
-# RAILWAY FILE SYSTEM DIAGNOSTIC
-# ============================================================
-
-print("")
-print("=" * 80)
-print("DEVSPARK RAILWAY FILE SYSTEM DIAGNOSTIC")
-print("=" * 80)
-
-print("")
-print("[1] Current Working Directory:")
-print(os.getcwd())
-
-print("")
-print("[2] app.py Location:")
-print(os.path.abspath(__file__))
-
-print("")
-print("[3] Flask Root Path:")
-print(app.root_path)
-
-print("")
-print("[4] Flask Template Folder:")
-print(app.template_folder)
-
-
-# ============================================================
-# /app CONTENT
-# ============================================================
-
-print("")
-print("=" * 80)
-print("PROJECT ROOT CONTENT")
-print("=" * 80)
-
-try:
-
-    for item in sorted(os.listdir("/app")):
-
-        full_path = os.path.join(
-            "/app",
-            item
-        )
-
-        if os.path.isdir(full_path):
-            print(
-                "[DIR ]",
-                item
-            )
-        else:
-            print(
-                "[FILE]",
-                item
-            )
-
-except Exception as ex:
-
-    print("")
-    print("[ERROR] Cannot read /app")
-    print(repr(ex))
-
-
-# ============================================================
-# TEMPLATES DIRECTORY
-# ============================================================
-
-template_path = os.path.join(
-    app.root_path,
-    app.template_folder
+app.config.update(
+    SECRET_KEY=secret,
+    MAX_CONTENT_LENGTH=int(os.environ.get("MAX_UPLOAD_MB", "1024")) * 1024 * 1024,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get(
+        "COOKIE_SECURE", "1" if os.environ.get("RAILWAY_ENVIRONMENT") else "0"
+    ) == "1",
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
 )
+app.json.ensure_ascii = False
 
-print("")
-print("=" * 80)
-print("TEMPLATES DIRECTORY CHECK")
-print("=" * 80)
-
-print("")
-print("[5] Template Path:")
-print(
-    os.path.abspath(template_path)
-)
-
-print("")
-print("[6] Template Directory Exists:")
-
-print(
-    os.path.isdir(template_path)
-)
+SITE_NAME = os.environ.get("SITE_NAME", "Devspark")
 
 
-# ============================================================
-# ADMIN TEMPLATE DIRECTORY
-# ============================================================
-
-admin_template_path = os.path.join(
-    template_path,
-    "admin"
-)
-
-print("")
-print("=" * 80)
-print("ADMIN TEMPLATE DIRECTORY CHECK")
-print("=" * 80)
-
-print("")
-print("[7] Admin Template Path:")
-
-print(
-    os.path.abspath(
-        admin_template_path
-    )
-)
-
-print("")
-print("[8] Admin Directory Exists:")
-
-print(
-    os.path.isdir(
-        admin_template_path
-    )
-)
+# ---------------------------------------------------------------- CSRF
+def csrf_token():
+    if "_csrf" not in session:
+        session["_csrf"] = secrets.token_hex(24)
+    return session["_csrf"]
 
 
-# ============================================================
-# ADMIN LOGIN TEMPLATE
-# ============================================================
-
-admin_login_path = os.path.join(
-    admin_template_path,
-    "admin_login.html"
-)
-
-print("")
-print("=" * 80)
-print("ADMIN LOGIN TEMPLATE CHECK")
-print("=" * 80)
-
-print("")
-print("[9] Expected File:")
-
-print(
-    os.path.abspath(
-        admin_login_path
-    )
-)
-
-print("")
-print("[10] File Exists:")
-
-print(
-    os.path.isfile(
-        admin_login_path
-    )
-)
+@app.before_request
+def csrf_protect():
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.path.startswith("/admin"):
+        sent = request.form.get("_csrf") or request.headers.get("X-CSRF-Token") or ""
+        expected = session.get("_csrf", "")
+        if not sent or not expected or not hmac.compare_digest(sent, expected):
+            abort(400)
 
 
-# ============================================================
-# LIST ADMIN TEMPLATES
-# ============================================================
+# ---------------------------------------------------------------- Templates
+app.jinja_env.globals["csrf_token"] = csrf_token
 
-print("")
-print("=" * 80)
-print("ADMIN TEMPLATE FILES")
-print("=" * 80)
 
-if os.path.isdir(admin_template_path):
+@app.context_processor
+def inject_globals():
+    return {"site_name": SITE_NAME, "current_year": datetime.now().year}
 
+
+@app.template_filter("fsize")
+def fsize(value):
     try:
-
-        files = sorted(
-            os.listdir(
-                admin_template_path
-            )
-        )
-
-        if not files:
-
-            print("")
-            print(
-                "[ADMIN] Directory is EMPTY."
-            )
-
-        else:
-
-            for filename in files:
-
-                full_path = os.path.join(
-                    admin_template_path,
-                    filename
-                )
-
-                if os.path.isfile(full_path):
-
-                    print(
-                        "[FILE]",
-                        filename
-                    )
-
-                elif os.path.isdir(full_path):
-
-                    print(
-                        "[DIR ]",
-                        filename
-                    )
-
-    except Exception as ex:
-
-        print("")
-        print(
-            "[ERROR] Cannot read admin templates."
-        )
-
-        print(
-            repr(ex)
-        )
-
-else:
-
-    print("")
-    print(
-        "[ERROR] templates/admin DOES NOT EXIST!"
-    )
+        n = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:.0f} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024
 
 
-# ============================================================
-# ALL TEMPLATES RECURSIVELY
-# ============================================================
-
-print("")
-print("=" * 80)
-print("ALL TEMPLATE FILES RECURSIVELY")
-print("=" * 80)
-
-if os.path.isdir(template_path):
-
-    try:
-
-        found_templates = False
-
-        for root, dirs, files in os.walk(
-            template_path
-        ):
-
-            for filename in sorted(files):
-
-                found_templates = True
-
-                full_path = os.path.join(
-                    root,
-                    filename
-                )
-
-                relative_path = os.path.relpath(
-                    full_path,
-                    template_path
-                )
-
-                print(
-                    "[TEMPLATE]",
-                    relative_path
-                )
-
-        if not found_templates:
-
-            print("")
-            print(
-                "[ERROR] No template files found!"
-            )
-
-    except Exception as ex:
-
-        print("")
-        print(
-            "[ERROR] Failed to scan templates."
-        )
-
-        print(
-            repr(ex)
-        )
-
-else:
-
-    print("")
-    print(
-        "[ERROR] Template directory does not exist."
-    )
+@app.template_filter("fdate")
+def fdate(value):
+    return str(value or "")[:10] or "—"
 
 
-# ============================================================
-# REGISTER BLUEPRINTS
-# ============================================================
-
-print("")
-print("=" * 80)
-print("REGISTERING BLUEPRINTS")
-print("=" * 80)
-
-app.register_blueprint(main)
-
-app.register_blueprint(
-    admin,
-    url_prefix="/admin"
-)
-
-print("")
-print("[OK] Main blueprint registered.")
-
-print(
-    "[OK] Admin blueprint registered."
-)
+# ---------------------------------------------------------------- Blueprints
+app.register_blueprint(main_bp)
+app.register_blueprint(admin, url_prefix="/admin")
 
 
-# ============================================================
-# ROUTES
-# ============================================================
-
-print("")
-print("=" * 80)
-print("REGISTERED ROUTES")
-print("=" * 80)
-
-for rule in sorted(
-    app.url_map.iter_rules(),
-    key=lambda x: str(x)
-):
-
-    print(
-        str(rule),
-        sorted(rule.methods)
-    )
+# ---------------------------------------------------------------- Security headers
+@app.after_request
+def security_headers(resp):
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return resp
 
 
-# ============================================================
-# FINAL RESULT
-# ============================================================
-
-print("")
-print("=" * 80)
-print("FINAL TEMPLATE DIAGNOSTIC")
-print("=" * 80)
-
-if os.path.isfile(admin_login_path):
-
-    print("")
-    print(
-        "SUCCESS: admin_login.html EXISTS IN RAILWAY."
-    )
-
-    print(
-        os.path.abspath(
-            admin_login_path
-        )
-    )
-
-else:
-
-    print("")
-    print(
-        "ERROR: admin_login.html DOES NOT EXIST IN RAILWAY."
-    )
-
-    print("")
-    print(
-        "Expected:"
-    )
-
-    print(
-        os.path.abspath(
-            admin_login_path
-        )
-    )
-
-print("")
-print("=" * 80)
-print("DEVSPARK RAILWAY DIAGNOSTIC COMPLETE")
-print("=" * 80)
-print("")
+# ---------------------------------------------------------------- Errors
+ERRORS = {
+    400: ("طلب غير صالح", "انتهت صلاحية الصفحة أو الطلب غير مكتمل. أعد تحميل الصفحة وحاول مرة أخرى."),
+    404: ("الصفحة غير موجودة", "الرابط الذي فتحته غير صحيح أو أن المحتوى حُذف."),
+    413: ("الملف كبير جدًا", "حجم الملف يتجاوز الحد المسموح به على الخادم."),
+    500: ("خطأ في الخادم", "حدث خطأ غير متوقع. حاول مرة أخرى بعد قليل."),
+}
 
 
-# ============================================================
-# LOCAL RUN
-# ============================================================
+def _make_handler(code, title, message):
+    def handler(_e):
+        return render_template("error.html", code=code, title=title, message=message), code
+    return handler
+
+
+for _code, (_title, _msg) in ERRORS.items():
+    app.register_error_handler(_code, _make_handler(_code, _title, _msg))
+
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
-        port=5000,
-        debug=False
+        port=int(os.environ.get("PORT", "5000")),
+        debug=os.environ.get("FLASK_DEBUG") == "1",
     )
