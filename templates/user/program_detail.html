@@ -1,64 +1,57 @@
 {% extends "user/base.html" %}
-{% from "macros.html" import icon, empty %}
-{% block title %}{{ p.name }} — {{ site_name }}{% endblock %}
-{% block topbar_title %}{{ p.name }}{% endblock %}
+{% from "user/_parts.html" import empty %}
+{% block title %}{{ p.name }} — {{ site_name or "BETACODE" }}{% endblock %}
 {% block content %}
 <div class="crumbs"><a href="{{ url_for('main.programs_page') }}">البرامج</a><span>/</span><span>{{ p.name }}</span></div>
 
-<div class="pdetail-head">
+<div class="pdetail">
   <span class="pico lg c{{ p.color }}">{{ p.letter }}</span>
   <div style="flex:1;min-width:240px">
     <h1>{{ p.name }}</h1>
     <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
       {% if p.category %}<span class="chip">{{ p.category }}</span>{% endif %}
-      {% if p.latest %}<span class="badge badge-ver">v{{ p.latest.version }}</span>{% endif %}
+      {% if p.latest %}<span class="badge ver">v{{ p.latest.version }}</span>{% endif %}
     </div>
     {% if p.description %}<p>{{ p.description }}</p>{% endif %}
   </div>
-  {% if p.latest %}
-  <a class="btn btn-primary btn-lg" href="{{ url_for('main.download', slug=p.slug, version=p.latest.version, filename=p.latest.fileName) }}">
-    {{ icon('download') }} تنزيل الإصدار {{ p.latest.version }}</a>
-  {% endif %}
+  {% if p.latest %}<a class="btn pri lg" href="{{ url_for('main.download', slug=p.slug, version=p.latest.version, filename=p.latest.fileName) }}">⬇ تنزيل الإصدار {{ p.latest.version }}</a>{% endif %}
 </div>
 
 {% if not p.latest %}
-  {{ empty('package', 'لا يوجد إصدار منشور', 'لم يُنشر أي إصدار لهذا البرنامج حتى الآن.') }}
+  {{ empty('لا يوجد إصدار منشور', 'لم يُنشر أي إصدار لهذا البرنامج حتى الآن.') }}
 {% else %}
 <div class="cols">
   <div class="stack">
-    <div class="card">
+    <div class="panel">
       <h2>ملاحظات الإصدار {{ p.latest.version }}</h2>
-      <p class="card-sub">{{ p.latest.releaseDate|fdate }}</p>
-      {% if p.latest.releaseNotes %}<div class="notes" style="color:var(--text)">{{ p.latest.releaseNotes }}</div>
+      <p class="sub">{{ p.latest.releaseDate|fdate }}</p>
+      {% if p.latest.releaseNotes %}<div class="notes" style="color:var(--ink)">{{ p.latest.releaseNotes }}</div>
       {% else %}<p class="muted">لا توجد ملاحظات لهذا الإصدار.</p>{% endif %}
       {% if p.latest.requiresRestart or p.latest.requiresDatabaseMigration %}
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-        {% if p.latest.requiresRestart %}<span class="badge badge-ver">يتطلب إعادة تشغيل</span>{% endif %}
-        {% if p.latest.requiresDatabaseMigration %}<span class="badge badge-ver">يحدّث قاعدة البيانات</span>{% endif %}
+        {% if p.latest.requiresRestart %}<span class="badge ver">يتطلب إعادة تشغيل</span>{% endif %}
+        {% if p.latest.requiresDatabaseMigration %}<span class="badge ver">يحدّث قاعدة البيانات</span>{% endif %}
       </div>{% endif %}
     </div>
 
-    <div class="card">
-      <h2>جميع الإصدارات</h2>
-      <p class="card-sub">{{ p.release_count }} إصدار</p>
+    <div class="panel">
+      <h2>جميع الإصدارات</h2><p class="sub">{{ p.release_count }} إصدار</p>
       <div class="tl">
         {% for r in p.releases %}
-        <div class="tl-item" style="background:var(--surface-2)">
+        <div class="tl-item">
           <div class="body">
-            <div class="top"><span class="badge badge-ver">v{{ r.version }}</span>
-              <span class="muted" style="font-size:12.5px">{{ r.releaseDate|fdate }} · {{ r.size|fsize }}</span></div>
+            <div class="top"><span class="badge ver">v{{ r.version }}</span><span class="muted" style="font-size:12.5px">{{ r.releaseDate|fdate }} · {{ r.size|fsize }}</span></div>
             {% if r.releaseNotes %}<div class="notes">{{ r.releaseNotes|truncate(220) }}</div>{% endif %}
           </div>
-          <a class="btn btn-ghost btn-sm" href="{{ url_for('main.download', slug=p.slug, version=r.version, filename=r.fileName) }}">{{ icon('download') }} تنزيل</a>
+          <a class="btn sm" href="{{ url_for('main.download', slug=p.slug, version=r.version, filename=r.fileName) }}">⬇ تنزيل</a>
         </div>
         {% endfor %}
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>تفاصيل الملف</h2>
-    <p class="card-sub">للإصدار الأحدث</p>
+  <div class="panel">
+    <h2>تفاصيل الملف</h2><p class="sub">للإصدار الأحدث</p>
     <div class="kv">
       <div><span>الإصدار</span><b class="ltr">{{ p.latest.version }}</b></div>
       <div><span>الحد الأدنى للتحديث</span><b class="ltr">{{ p.latest.minimumVersion }}</b></div>
@@ -67,9 +60,9 @@
       <div><span>تاريخ النشر</span><b>{{ p.latest.releaseDate|fdate }}</b></div>
     </div>
     <div style="margin-top:14px">
-      <div class="lbl" style="font-weight:700;font-size:13px;margin-bottom:6px">بصمة SHA-256</div>
-      <div class="mono ltr" style="word-break:break-all;background:var(--surface-2);padding:10px;border-radius:10px">{{ p.latest.sha256 or '—' }}</div>
-      {% if p.latest.sha256 %}<button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" data-copy="{{ p.latest.sha256 }}">نسخ البصمة</button>{% endif %}
+      <b style="font-size:13px">بصمة SHA-256</b>
+      <div class="mono ltr hash">{{ p.latest.sha256 or '—' }}</div>
+      {% if p.latest.sha256 %}<button type="button" class="btn sm" style="margin-top:8px" data-copy="{{ p.latest.sha256 }}">نسخ البصمة</button>{% endif %}
     </div>
   </div>
 </div>
