@@ -1,5 +1,5 @@
 {% extends "user/base.html" %}
-{% from "user/_parts.html" import empty %}
+{% from "user/parts.html" import empty %}
 {% block title %}{{ p.name }} — {{ site_name or "BETACODE" }}{% endblock %}
 {% block content %}
 <div class="crumbs"><a href="{{ url_for('main.programs_page') }}">البرامج</a><span>/</span><span>{{ p.name }}</span></div>
