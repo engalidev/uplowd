@@ -1,24 +1,25 @@
-/* بيانات المحافظات — عدّل الأسماء والنصوص والرموز من هنا فقط.
+/* بيانات المحافظات (حلبجة تظهر فقط إذا احتوى ملف GeoJSON عليها) — عدّل الأسماء والنصوص والرموز من هنا فقط.
    id يطابق المفتاح في iraq-map.js ، و icon يطابق مفتاحًا في IRAQ_ICONS. */
 window.IRAQ_DATA = [
-  { id: "duhok",        ar: "دهوك",      en: "Duhok",        landmark: "معبد لالش",              icon: "cone",     desc: "جبال شاهقة وبوابات تاريخية وأقدم المعابد الإيزيدية." },
-  { id: "nineveh",      ar: "نينوى",     en: "Nineveh",      landmark: "الثور المجنح الآشوري",   icon: "lamassu",  desc: "عاصمة الآشوريين ومدينة نمرود والحضر ومنارة الحدباء." },
-  { id: "erbil",        ar: "أربيل",     en: "Erbil",        landmark: "قلعة أربيل",             icon: "citadel",  desc: "من أقدم المدن المأهولة في العالم بقلعتها فوق التل." },
-  { id: "kirkuk",       ar: "كركوك",     en: "Kirkuk",       landmark: "نار بابا كركر",          icon: "flame",    desc: "مدينة القلعة القديمة وأولى حقول النفط في العراق." },
-  { id: "sulaymaniyah", ar: "السليمانية",en: "Sulaymaniyah", landmark: "جبال أزمر وكويزة",       icon: "mountain", desc: "عاصمة الثقافة الكردية بجبالها وبحيراتها وشعرائها." },
-  { id: "salahuddin",   ar: "صلاح الدين",en: "Salah al-Din", landmark: "المئذنة الملوية - سامراء",icon: "spiral",   desc: "تكريت وسامراء، عاصمة العباسيين وملويتها الشهيرة." },
-  { id: "diyala",       ar: "ديالى",     en: "Diyala",       landmark: "بساتين البرتقال",        icon: "orchard",  desc: "مدينة البساتين والحمضيات على ضفاف نهر ديالى." },
-  { id: "anbar",        ar: "الأنبار",   en: "Anbar",        landmark: "نواعير هيت",             icon: "wheel",    desc: "أكبر المحافظات مساحة، على ضفاف الفرات ونواعيره." },
-  { id: "baghdad",      ar: "بغداد",     en: "Baghdad",      landmark: "بغداد العباسية",         icon: "dome",     desc: "مدينة السلام وبيت الحكمة وعاصمة العراق عبر العصور." },
-  { id: "babylon",      ar: "بابل",      en: "Babylon",      landmark: "بوابة عشتار",            icon: "gate",     desc: "الحدائق المعلقة وشريعة حمورابي وحضارة وادي الرافدين." },
-  { id: "karbala",      ar: "كربلاء",    en: "Karbala",      landmark: "المرقدان الشريفان",      icon: "twin",     desc: "مدينة مقدسة بقبابها ومنائرها وزوّارها من كل العالم." },
-  { id: "wasit",        ar: "واسط",      en: "Wasit",        landmark: "سدة الكوت",              icon: "barrage",  desc: "مدينة الكوت على دجلة وآثار مدينة واسط التاريخية." },
-  { id: "najaf",        ar: "النجف",     en: "Najaf",        landmark: "القبة الذهبية",          icon: "shrine",   desc: "عاصمة العلم الديني ومقبرة وادي السلام الشهيرة." },
-  { id: "qadisiyyah",   ar: "القادسية",  en: "Al-Qadisiyyah",landmark: "سنابل الشلب",            icon: "wheat",    desc: "أرض معركة القادسية وسلة العراق من الرز والحنطة." },
-  { id: "maysan",       ar: "ميسان",     en: "Maysan",       landmark: "الأهوار والمشحوف",       icon: "marsh",    desc: "أهوار الجنوب المدرجة على لائحة التراث العالمي." },
-  { id: "muthanna",     ar: "المثنى",    en: "Muthanna",     landmark: "صحراء السماوة وأوروك",   icon: "dunes",    desc: "بادية واسعة وبوابة أوروك، أولى مدن التاريخ." },
-  { id: "dhiqar",       ar: "ذي قار",    en: "Dhi Qar",      landmark: "زقورة أور",              icon: "ziggurat", desc: "موطن أور السومرية ومهد النبي إبراهيم عليه السلام." },
-  { id: "basra",        ar: "البصرة",    en: "Basra",        landmark: "النخيل وشط العرب",       icon: "palm",     desc: "ثغر العراق الباسم، ميناء ونفط ونخيل وسندباد." }
+  { id: "duhok", alias: ["dahuk","dohuk","duhok","دهوك"],        ar: "دهوك",      en: "Duhok",        landmark: "معبد لالش",              icon: "cone",     desc: "جبال شاهقة وبوابات تاريخية وأقدم المعابد الإيزيدية." },
+  { id: "nineveh", alias: ["ninawa","nineveh","ninewa","نينوى"],      ar: "نينوى",     en: "Nineveh",      landmark: "الثور المجنح الآشوري",   icon: "lamassu",  desc: "عاصمة الآشوريين ومدينة نمرود والحضر ومنارة الحدباء." },
+  { id: "erbil", alias: ["arbil","erbil","irbil","hawler","أربيل","اربيل"],        ar: "أربيل",     en: "Erbil",        landmark: "قلعة أربيل",             icon: "citadel",  desc: "من أقدم المدن المأهولة في العالم بقلعتها فوق التل." },
+  { id: "kirkuk", alias: ["kirkuk","tamim","attamim","كركوك","التأميم"],       ar: "كركوك",     en: "Kirkuk",       landmark: "نار بابا كركر",          icon: "flame",    desc: "مدينة القلعة القديمة وأولى حقول النفط في العراق." },
+  { id: "sulaymaniyah", alias: ["sulaymaniyah","sulaimaniyah","sulaymaniya","slemani","السليمانية"], ar: "السليمانية",en: "Sulaymaniyah", landmark: "جبال أزمر وكويزة",       icon: "mountain", desc: "عاصمة الثقافة الكردية بجبالها وبحيراتها وشعرائها." },
+  { id: "salahuddin", alias: ["salahaddin","salahuddin","saladin","salahaldin","salahdin","صلاحالدين","صلاح الدين"],   ar: "صلاح الدين",en: "Salah al-Din", landmark: "المئذنة الملوية - سامراء",icon: "spiral",   desc: "تكريت وسامراء، عاصمة العباسيين وملويتها الشهيرة." },
+  { id: "diyala", alias: ["diyala","diala","ديالى"],       ar: "ديالى",     en: "Diyala",       landmark: "بساتين البرتقال",        icon: "orchard",  desc: "مدينة البساتين والحمضيات على ضفاف نهر ديالى." },
+  { id: "anbar", alias: ["anbar","alanbar","الأنبار","انبار","أنبار"],        ar: "الأنبار",   en: "Anbar",        landmark: "نواعير هيت",             icon: "wheel",    desc: "أكبر المحافظات مساحة، على ضفاف الفرات ونواعيره." },
+  { id: "baghdad", alias: ["baghdad","bagdad","بغداد"],      ar: "بغداد",     en: "Baghdad",      landmark: "بغداد العباسية",         icon: "dome",     desc: "مدينة السلام وبيت الحكمة وعاصمة العراق عبر العصور." },
+  { id: "babylon", alias: ["babylon","babil","babel","بابل"],      ar: "بابل",      en: "Babylon",      landmark: "بوابة عشتار",            icon: "gate",     desc: "الحدائق المعلقة وشريعة حمورابي وحضارة وادي الرافدين." },
+  { id: "karbala", alias: ["karbala","kerbala","karbalaa","كربلاء"],      ar: "كربلاء",    en: "Karbala",      landmark: "المرقدان الشريفان",      icon: "twin",     desc: "مدينة مقدسة بقبابها ومنائرها وزوّارها من كل العالم." },
+  { id: "wasit", alias: ["wasit","wasat","واسط"],        ar: "واسط",      en: "Wasit",        landmark: "سدة الكوت",              icon: "barrage",  desc: "مدينة الكوت على دجلة وآثار مدينة واسط التاريخية." },
+  { id: "najaf", alias: ["najaf","annajaf","النجف","نجف"],        ar: "النجف",     en: "Najaf",        landmark: "القبة الذهبية",          icon: "shrine",   desc: "عاصمة العلم الديني ومقبرة وادي السلام الشهيرة." },
+  { id: "qadisiyyah", alias: ["qadisiyah","qadisiyyah","qadissiya","qadisiya","diwaniyah","القادسية","قادسية","الديوانية"],   ar: "القادسية",  en: "Al-Qadisiyyah",landmark: "سنابل الشلب",            icon: "wheat",    desc: "أرض معركة القادسية وسلة العراق من الرز والحنطة." },
+  { id: "maysan", alias: ["maysan","misan","missan","ميسان"],       ar: "ميسان",     en: "Maysan",       landmark: "الأهوار والمشحوف",       icon: "marsh",    desc: "أهوار الجنوب المدرجة على لائحة التراث العالمي." },
+  { id: "muthanna", alias: ["muthanna","muthana","المثنى","مثنى"],     ar: "المثنى",    en: "Muthanna",     landmark: "صحراء السماوة وأوروك",   icon: "dunes",    desc: "بادية واسعة وبوابة أوروك، أولى مدن التاريخ." },
+  { id: "dhiqar", alias: ["dhiqar","thiqar","dhiqar","ذيقار","ذي قار"],       ar: "ذي قار",    en: "Dhi Qar",      landmark: "زقورة أور",              icon: "ziggurat", desc: "موطن أور السومرية ومهد النبي إبراهيم عليه السلام." },
+  { id: "halabja", alias: ["halabja","halabjah","حلبجة"], ar: "حلبجة", en: "Halabja", landmark: "جبال هورامان", icon: "mountain", desc: "مدينة السلام والذاكرة، بين جبال هورامان وسهل شهرزور." },
+  { id: "basra", alias: ["basra","basrah","albasrah","البصرة","بصرة"],        ar: "البصرة",    en: "Basra",        landmark: "النخيل وشط العرب",       icon: "palm",     desc: "ثغر العراق الباسم، ميناء ونفط ونخيل وسندباد." }
 ];
 
 /* رموز بمقياس 64×64 (خطوط فقط) */
