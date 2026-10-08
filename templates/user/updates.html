@@ -1,0 +1,23 @@
+{% extends "user/base.html" %}
+{% from "macros.html" import empty %}
+{% block title %}سجل التحديثات — {{ site_name }}{% endblock %}
+{% block topbar_title %}سجل التحديثات{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>سجل التحديثات</h1><p>أحدث الإصدارات المنشورة لجميع البرامج.</p></div></div>
+{% if releases %}
+<div class="tl">
+  {% for r in releases %}
+  <a class="tl-item" href="{{ url_for('main.program_page', slug=r.slug) }}">
+    <span class="pico sm c{{ r.color }}">{{ r.letter }}</span>
+    <div class="body">
+      <div class="top"><b>{{ r.programName }}</b><span class="badge badge-ver">v{{ r.version }}</span>
+        <span class="muted" style="font-size:12.5px">{{ r.releaseDate|fdate }} · {{ r.size|fsize }}</span></div>
+      {% if r.releaseNotes %}<div class="notes">{{ r.releaseNotes|truncate(200) }}</div>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+  {{ empty('refresh', 'لا توجد تحديثات بعد', 'ستظهر الإصدارات هنا فور نشرها.') }}
+{% endif %}
+{% endblock %}
