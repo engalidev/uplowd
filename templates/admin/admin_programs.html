@@ -1,0 +1,44 @@
+{% extends "admin/admin_base.html" %}
+{% from "macros.html" import icon, program_card, empty %}
+{% block title %}البرامج والإصدارات — {{ site_name }}{% endblock %}
+{% block topbar_title %}البرامج والإصدارات{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>البرامج</h1><p>كل برنامج له إصداراته الخاصة. افتح برنامجًا لرفع إصدار جديد.</p></div>
+  <button type="button" class="btn btn-primary" data-open="createDlg">{{ icon('plus') }} برنامج جديد</button>
+</div>
+
+{% if programs %}
+  <div class="pgrid">{% for p in programs %}{{ program_card(p, url_for('admin.program_detail', slug=p.slug)) }}{% endfor %}</div>
+{% else %}
+  {% call empty('package', 'لا توجد برامج بعد', 'مثال: برنامج إدارة مبيعات، برنامج إدارة مدارس، برنامج صيدليات.') %}
+    <button type="button" class="btn btn-primary" data-open="createDlg">{{ icon('plus') }} إضافة أول برنامج</button>
+  {% endcall %}
+{% endif %}
+
+<dialog id="createDlg">
+  <form class="dlg" method="post" action="{{ url_for('admin.program_create') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2>برنامج جديد</h2>
+    <div class="field"><label class="lbl" for="c_name">اسم البرنامج</label>
+      <input class="input" id="c_name" name="name" maxlength="80" placeholder="مثال: نظام إدارة المبيعات" required></div>
+    <div class="row2">
+      <div class="field"><label class="lbl" for="c_cat">التصنيف</label>
+        <input class="input" id="c_cat" name="category" list="cats" maxlength="40" placeholder="مبيعات، تعليم…">
+        <datalist id="cats">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist></div>
+      <div class="field"><label class="lbl" for="c_icon">رمز (اختياري)</label>
+        <input class="input" id="c_icon" name="icon" maxlength="2" placeholder="💊">
+        <div class="hint">إيموجي أو حرف. الافتراضي أول حرف من الاسم.</div></div>
+    </div>
+    <div class="field"><label class="lbl" for="c_slug">المعرّف (اختياري)</label>
+      <input class="input ltr" id="c_slug" name="slug" maxlength="50" placeholder="sales-erp" pattern="[A-Za-z0-9_\-]*">
+      <div class="hint">يظهر في الروابط. أحرف إنجليزية وأرقام و - فقط. يُولَّد تلقائيًا إن تركته فارغًا.</div></div>
+    <div class="field"><label class="lbl" for="c_desc">وصف مختصر</label>
+      <textarea class="textarea" id="c_desc" name="description" maxlength="600" placeholder="ماذا يفعل هذا البرنامج ولمن هو؟"></textarea></div>
+    <div class="dlg-acts">
+      <button type="button" class="btn btn-ghost" data-close>إلغاء</button>
+      <button type="submit" class="btn btn-primary">إنشاء البرنامج</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
