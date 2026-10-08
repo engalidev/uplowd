@@ -1,95 +1,80 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك</title>
-  <meta name="description" content="نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة وتسريع النمو.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-</head>
-<body>
+{% extends "user/base.html" %}
+{% from "user/_parts.html" import program_card, release_item, empty %}
+{% block title %}{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك{% endblock %}
+{% block content %}
 
-<header class="nav">
-  <div class="wrap">
-    <a class="logo" href="{{ url_for('main.index') }}"><i>β</i>BETACODE</a>
-    <nav class="links">
-      <a class="keep" href="#map">خريطة العراق</a>
-      <a href="{{ url_for('main.programs_page') }}">البرامج</a>
-      <a href="{{ url_for('main.updates') }}">سجل التحديثات</a>
-      <a href="{{ url_for('admin.login') }}">لوحة الإدارة</a>
-    </nav>
-  </div>
-</header>
-
-<main class="wrap">
-
-  <!-- ===== Hero ===== -->
-  <section class="hero">
-    <div class="rev">
-      <span class="tag"><b></b> أنظمة حديثة · تحول رقمي</span>
-      <h1><span class="grad">BETACODE</span><small>حلول برمجية ذكية لمستقبل أعمالك</small></h1>
-      <p>نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة، وتسريع النمو، وتحقيق التحول الرقمي باحترافية.</p>
-      <div class="acts">
-        <a class="btn pri" href="{{ url_for('main.programs_page') }}">اكتشف خدماتنا ←</a>
-        <a class="btn" href="{{ url_for('main.updates') }}">آخر التحديثات</a>
-      </div>
-      <div class="stats">
-        <div><b class="grad">{{ stats.programs if stats else 0 }}</b><span>برنامج متاح</span></div>
-        <div><b class="grad">{{ stats.releases if stats else 0 }}</b><span>إصدار منشور</span></div>
-        <div><b class="grad">SHA-256</b><span>تحقق من كل ملف</span></div>
-      </div>
+<section class="hero">
+  <canvas id="bgNet" aria-hidden="true"></canvas>
+  <div class="rev">
+    <span class="tag"><b></b> أنظمة حديثة · تحول رقمي</span>
+    <h1><span class="grad">BETACODE</span><small>حلول برمجية ذكية لمستقبل أعمالك</small></h1>
+    <p class="lead">نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة، وتسريع النمو، وتحقيق التحول الرقمي باحترافية.</p>
+    <div class="acts">
+      <a class="btn pri lg" href="{{ url_for('main.programs_page') }}">اكتشف خدماتنا ←</a>
+      <a class="btn lg" href="#map">خريطة العراق</a>
     </div>
+    <div class="hstats">
+      <div><b class="grad">{{ stats.programs if stats else 0 }}</b><span>برنامج متاح</span></div>
+      <div><b class="grad">{{ stats.releases if stats else 0 }}</b><span>إصدار منشور</span></div>
+      <div><b class="grad">SHA-256</b><span>تحقق من كل ملف</span></div>
+    </div>
+  </div>
 
-    <div class="mock rev" aria-hidden="true">
-      <div class="dots"><i></i><i></i><i></i></div>
-      <div class="mrow">
-        <div class="kpi"><small>Uptime</small><b>99.98%</b></div>
-        <div class="kpi"><small>Releases</small><b>{{ stats.releases if stats else 0 }}</b></div>
-        <div class="kpi"><small>Programs</small><b>{{ stats.programs if stats else 0 }}</b></div>
+  <div class="dash-box rev d2" aria-hidden="true">
+    <div class="fl a">✓ Deployed v2.4.0</div>
+    <div class="fl b">SHA-256 verified</div>
+    <div class="dash-wrap"><div class="dash">
+      <div class="dash-top"><i></i><i></i><i></i><span>betacode://erp/live</span></div>
+      <div class="kpis">
+        <div class="kpi"><small>Uptime</small><b data-count="99.98" data-dec="2" data-suf="%">0</b></div>
+        <div class="kpi"><small>Releases</small><b data-count="{{ stats.releases if stats else 24 }}">0</b></div>
+        <div class="kpi"><small>Users</small><b data-count="1280" data-sep="1">0</b></div>
       </div>
-      <div class="chart">
-        <svg viewBox="0 0 300 110" width="100%" height="100%" preserveAspectRatio="none">
-          <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>
-          <path d="M0 90C30 80 45 40 80 55S130 95 160 60 215 15 245 35 285 20 300 10V110H0Z" fill="url(#cg)"/>
-          <path d="M0 90C30 80 45 40 80 55S130 95 160 60 215 15 245 35 285 20 300 10" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+      <div class="live"><em>LIVE</em>
+        <svg viewBox="0 0 400 140" preserveAspectRatio="none">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".4"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>
+          <path class="gl" d="M0 35H400M0 70H400M0 105H400"/>
+          <g id="slide"><path class="area" id="chA"/><path class="line" id="chL"/></g>
         </svg>
       </div>
-      <div class="code"><em>const</em> system = <u>"BETACODE ERP"</u>;<br><em>await</em> deploy(system, { secure: <em>true</em> });<br>// ✓ ready for growth</div>
-    </div>
-  </section>
+      <div class="bars" id="bars"></div>
+      <pre class="term" id="term"></pre>
+    </div></div>
+  </div>
+</section>
 
-  <!-- ===== Iraq map ===== -->
-  <section class="map" id="map">
-    <div class="head">
-      <h2>العراق <span class="grad">بهويته وحضارته</span></h2>
-      <p>مرّر المؤشر فوق أي محافظة لاكتشاف رمزها التاريخي والحضاري.</p>
-    </div>
-    <div class="stage">
-      <div id="iraqMap"></div>
-      <aside class="card" id="govCard" aria-live="polite">
-        <div class="gico" id="govIcon"></div>
-        <h3 id="govName"></h3>
-        <div class="en" id="govEn"></div>
-        <span class="mark" id="govMark"></span>
-        <p id="govDesc"></p>
-      </aside>
-    </div>
-  </section>
+<section class="sec" id="map">
+  <div class="head">
+    <h2>العراق <span class="grad">بهويته وحضارته</span></h2>
+    <p>مرّر المؤشر فوق أي محافظة لاكتشاف رمزها التاريخي والحضاري.</p>
+  </div>
+  <div class="stage">
+    <div id="iraqMap" data-geojson="{{ url_for('static', filename='data/iraq-adm1.geojson') }}"></div>
+    <aside class="gcard" id="govCard" aria-live="polite">
+      <div class="gico" id="govIcon"></div><h3 id="govName"></h3><div class="en" id="govEn"></div>
+      <span class="mark" id="govMark"></span><p id="govDesc"></p>
+    </aside>
+  </div>
+</section>
 
-  <!-- ===== CTA ===== -->
-  <section class="band">
-    <h2>جاهزون لنقل أعمالك إلى المستوى التالي</h2>
-    <p>تصفّح برامجنا وحمّل أحدث الإصدارات مع التحقق من سلامة كل ملف.</p>
-    <div class="acts"><a class="btn pri" href="{{ url_for('main.programs_page') }}">ابدأ الآن</a></div>
-  </section>
-</main>
+<div class="shead"><h2>البرامج</h2><a href="{{ url_for('main.programs_page') }}">عرض الكل ←</a></div>
+{% if programs %}<div class="pgrid">{% for p in programs %}{{ program_card(p) }}{% endfor %}</div>
+{% else %}{{ empty('لا توجد برامج بعد', 'ستظهر هنا البرامج بمجرد أن ينشرها المسؤول.') }}{% endif %}
 
-<footer>© {{ site_name or "BETACODE" }} — جميع الحقوق محفوظة</footer>
+{% if recent %}
+<div class="shead"><h2>آخر التحديثات</h2><a href="{{ url_for('main.updates') }}">السجل الكامل ←</a></div>
+<div class="tl">{% for r in recent %}{{ release_item(r) }}{% endfor %}</div>
+{% endif %}
 
+<section class="band">
+  <h2>جاهزون لنقل أعمالك إلى المستوى التالي</h2>
+  <p>تصفّح برامجنا وحمّل أحدث الإصدارات مع التحقق من سلامة كل ملف.</p>
+  <div class="acts"><a class="btn pri lg" href="{{ url_for('main.programs_page') }}">ابدأ الآن</a></div>
+</section>
+{% endblock %}
+{% block scripts %}
 <script src="{{ url_for('static', filename='JS/iraq-map.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/iraq-data.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/home.js') }}"></script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='JS/hero.js') }}"></script>
+{% endblock %}
