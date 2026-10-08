@@ -1,0 +1,25 @@
+{% extends "user/base.html" %}
+{% from "macros.html" import icon, program_card, empty %}
+{% block title %}البرامج — {{ site_name }}{% endblock %}
+{% block topbar_title %}البرامج{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>البرامج</h1><p>اختر البرنامج لتنزيل آخر إصدار ومراجعة تاريخ التحديثات.</p></div>
+</div>
+
+{% if programs %}
+<div class="toolbar">
+  <div class="searchbox">{{ icon('search') }}<input id="programSearch" class="input" type="search" placeholder="ابحث باسم البرنامج" aria-label="بحث"></div>
+  {% if categories %}
+  <div class="filters">
+    <button type="button" class="fchip active" data-filter="">الكل</button>
+    {% for c in categories %}<button type="button" class="fchip" data-filter="{{ c }}">{{ c }}</button>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+<div class="pgrid">{% for p in programs %}{{ program_card(p, url_for('main.program_page', slug=p.slug)) }}{% endfor %}</div>
+<div id="noResults" style="display:none;margin-top:18px">{{ empty('search', 'لا توجد نتائج', 'جرّب اسمًا آخر أو اختر «الكل».') }}</div>
+{% else %}
+  {{ empty('package', 'لا توجد برامج بعد', 'ستظهر هنا البرامج بمجرد أن ينشرها المسؤول.') }}
+{% endif %}
+{% endblock %}
