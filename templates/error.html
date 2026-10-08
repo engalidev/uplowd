@@ -1,0 +1,11 @@
+{% extends "user/base.html" %}
+{% from "macros.html" import icon %}
+{% block title %}{{ title }} — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="empty" style="margin-top:40px">
+  {{ icon('shield') }}
+  <h3>{{ title }}</h3>
+  <p>{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for('main.index') }}">العودة للرئيسية</a>
+</div>
+{% endblock %}
