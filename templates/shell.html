@@ -1,0 +1,49 @@
+{% from "macros.html" import icon, flashes %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1423">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}">
+  <script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{% block brand_href %}{{ url_for('main.index') }}{% endblock %}">
+      <span class="brand-mark">D</span>
+      <span class="brand-text"><b>{{ site_name }}</b><small>{% block brand_sub %}{% endblock %}</small></span>
+    </a>
+    <nav class="nav">{% block nav %}{% endblock %}</nav>
+    <div class="sidebar-foot">{% block sidebar_foot %}{% endblock %}</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="icon-btn menu-btn" id="menuBtn" aria-label="فتح القائمة">{{ icon('menu') }}</button>
+      <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+      <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+        <button type="button" class="icon-btn" id="themeBtn" aria-label="تبديل المظهر">
+          <span class="t-sun">{{ icon('sun') }}</span><span class="t-moon">{{ icon('moon') }}</span>
+        </button>
+      </div>
+    </header>
+    <main class="content">
+      {{ flashes() }}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">© {{ current_year }} BETACODE — {{ site_name }}</footer>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
