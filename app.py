@@ -7,8 +7,7 @@ from flask import Flask, abort, render_template, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from routes.admin import admin
-from routes.user import main as main_bp
-
+from routes.user.main import main as main_bp
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
