@@ -1,0 +1,142 @@
+{% extends "admin/admin_base.html" %}
+{% from "macros.html" import icon, empty %}
+{% block title %}{{ p.name }} — {{ site_name }}{% endblock %}
+{% block topbar_title %}{{ p.name }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('admin.programs') }}">البرامج</a><span>/</span><span>{{ p.name }}</span></div>
+
+<div class="pdetail-head">
+  <span class="pico lg c{{ p.color }}">{{ p.letter }}</span>
+  <div style="flex:1;min-width:240px">
+    <h1>{{ p.name }}</h1>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center">
+      <span class="badge ltr">{{ p.slug }}</span>
+      {% if p.category %}<span class="chip">{{ p.category }}</span>{% endif %}
+      {% if p.latest %}<span class="badge badge-ver">v{{ p.latest.version }}</span>{% endif %}
+    </div>
+    {% if p.description %}<p>{{ p.description }}</p>{% endif %}
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="btn btn-ghost" href="{{ url_for('main.program_page', slug=p.slug) }}" target="_blank" rel="noopener">{{ icon('external') }} عرض في الموقع</a>
+    <button type="button" class="btn btn-ghost" data-open="editDlg">{{ icon('edit') }} تعديل</button>
+    <button type="button" class="btn btn-danger" data-open="deleteDlg">{{ icon('trash') }} حذف</button>
+  </div>
+</div>
+
+<div class="cols">
+  <div class="stack">
+    <div class="card">
+      <h2>نشر إصدار جديد</h2>
+      <p class="card-sub">{% if p.latest %}الإصدار الحالي: <span class="ltr">{{ p.latest.version }}</span>. الإصدار الجديد يجب أن يكون أعلى منه.{% else %}لم يُنشر أي إصدار بعد. ارفع الإصدار الأول.{% endif %}</p>
+      <form method="post" action="{{ url_for('admin.release_publish', slug=p.slug) }}" enctype="multipart/form-data" data-upload>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <div class="row2">
+          <div class="field"><label class="lbl" for="version">رقم الإصدار</label>
+            <input class="input ltr" id="version" name="version" placeholder="1.0.1" required></div>
+          <div class="field"><label class="lbl" for="minimum_version">الحد الأدنى للتحديث منه</label>
+            <input class="input ltr" id="minimum_version" name="minimum_version" value="0.0.0">
+            <div class="hint">أقدم إصدار يُسمح له بالتحديث مباشرة.</div></div>
+        </div>
+        <div class="field">
+          <label class="lbl">ملف التثبيت</label>
+          <div class="drop">
+            <input type="file" name="update_file" accept=".exe,.msi,.zip,.rar" required>
+            {{ icon('upload') }}
+            <strong class="file-name">اسحب الملف هنا أو اضغط للاختيار</strong>
+            <span class="hint">EXE · MSI · ZIP · RAR</span>
+          </div>
+        </div>
+        <div class="field"><label class="lbl" for="release_notes">ملاحظات الإصدار</label>
+          <textarea class="textarea" id="release_notes" name="release_notes" placeholder="ما الذي تغيّر في هذا الإصدار؟"></textarea></div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="requires_restart"><span><b>يتطلب إعادة تشغيل</b><small>سيطلب البرنامج إعادة التشغيل بعد التحديث</small></span></label>
+          <label class="check"><input type="checkbox" name="requires_database_migration"><span><b>يحدّث قاعدة البيانات</b><small>فعّله عند وجود تغييرات في الجداول</small></span></label>
+        </div>
+        <div class="progress"><div class="bar"><i></i></div><p><span class="pct">0%</span><span class="sz ltr"></span></p></div>
+        <div class="form-error"></div>
+        <button type="submit" class="btn btn-primary btn-lg" style="margin-top:6px">{{ icon('upload') }} نشر الإصدار</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>الإصدارات المنشورة</h2>
+      <p class="card-sub">{{ p.release_count }} إصدار</p>
+      {% if p.releases %}
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>الإصدار</th><th>الملف</th><th>الحجم</th><th>التاريخ</th><th></th></tr></thead>
+        <tbody>
+        {% for r in p.releases %}
+          <tr>
+            <td><span class="badge badge-ver">v{{ r.version }}</span>{% if loop.first %} <span class="badge badge-ok">الأحدث</span>{% endif %}</td>
+            <td class="ltr mono" style="word-break:break-all">{{ r.fileName }}</td>
+            <td>{{ r.size|fsize }}</td><td>{{ r.releaseDate|fdate }}</td>
+            <td><div style="display:flex;gap:6px">
+              <a class="btn btn-ghost btn-sm" href="{{ url_for('main.download', slug=p.slug, version=r.version, filename=r.fileName) }}">{{ icon('download') }}</a>
+              <form method="post" action="{{ url_for('admin.release_delete', slug=p.slug, version=r.version) }}" data-confirm="حذف الإصدار {{ r.version }} نهائيًا؟ لا يمكن التراجع.">
+                <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+                <button class="btn btn-danger btn-sm" type="submit" aria-label="حذف الإصدار">{{ icon('trash') }}</button>
+              </form></div></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% else %}
+        {{ empty('layers', 'لا توجد إصدارات', 'استخدم النموذج أعلاه لنشر أول إصدار.') }}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>معلومات البرنامج</h2>
+    <p class="card-sub">روابط التكامل مع البرنامج المثبّت عند العميل</p>
+    <div class="kv">
+      <div><span>المعرّف</span><b class="ltr">{{ p.slug }}</b></div>
+      <div><span>عدد الإصدارات</span><b>{{ p.release_count }}</b></div>
+      <div><span>المساحة</span><b>{{ p.total_size|fsize }}</b></div>
+      <div><span>أُنشئ في</span><b>{{ p.createdAt|fdate }}</b></div>
+    </div>
+    {% set murl = url_for('main.api_manifest', slug=p.slug, _external=True) %}
+    <div style="margin-top:14px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px">رابط manifest</div>
+      <div class="mono ltr" style="word-break:break-all;background:var(--surface-2);padding:10px;border-radius:10px">{{ murl }}</div>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" data-copy="{{ murl }}">نسخ الرابط</button>
+    </div>
+  </div>
+</div>
+
+<dialog id="editDlg">
+  <form class="dlg" method="post" action="{{ url_for('admin.program_edit', slug=p.slug) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2>تعديل البرنامج</h2>
+    <div class="field"><label class="lbl" for="e_name">الاسم</label>
+      <input class="input" id="e_name" name="name" maxlength="80" value="{{ p.name }}" required></div>
+    <div class="row2">
+      <div class="field"><label class="lbl" for="e_cat">التصنيف</label>
+        <input class="input" id="e_cat" name="category" list="ecats" maxlength="40" value="{{ p.category or '' }}">
+        <datalist id="ecats">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist></div>
+      <div class="field"><label class="lbl" for="e_icon">الرمز</label>
+        <input class="input" id="e_icon" name="icon" maxlength="2" value="{{ p.icon or '' }}"></div>
+    </div>
+    <div class="field"><label class="lbl" for="e_desc">الوصف</label>
+      <textarea class="textarea" id="e_desc" name="description" maxlength="600">{{ p.description or '' }}</textarea></div>
+    <div class="dlg-acts">
+      <button type="button" class="btn btn-ghost" data-close>إلغاء</button>
+      <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="deleteDlg">
+  <form class="dlg" method="post" action="{{ url_for('admin.program_delete', slug=p.slug) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2>حذف «{{ p.name }}»</h2>
+    <p class="muted" style="margin-bottom:14px">سيتم حذف البرنامج وجميع إصداراته وملفاته نهائيًا. لتأكيد الحذف اكتب المعرّف:
+      <b class="ltr" style="color:var(--text)">{{ p.slug }}</b></p>
+    <div class="field"><input class="input ltr" name="confirm" autocomplete="off" required aria-label="اكتب المعرّف للتأكيد"></div>
+    <div class="dlg-acts">
+      <button type="button" class="btn btn-ghost" data-close>إلغاء</button>
+      <button type="submit" class="btn btn-danger">حذف نهائيًا</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
