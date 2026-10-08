@@ -1,0 +1,23 @@
+{% macro program_card(p) %}
+<a class="pcard" href="{{ url_for('main.program_page', slug=p.slug) }}" data-name="{{ p.name|lower }}" data-cat="{{ p.category or '' }}">
+  <div class="pcard-top"><span class="pico c{{ p.color }}">{{ p.letter }}</span>{% if p.latest %}<span class="badge ver">v{{ p.latest.version }}</span>{% endif %}</div>
+  <h3>{{ p.name }}</h3>
+  <p>{{ p.description or 'لا يوجد وصف لهذا البرنامج.' }}</p>
+  <div class="pcard-meta">{% if p.category %}<span class="chip">{{ p.category }}</span>{% else %}<span></span>{% endif %}<span class="muted">{{ p.release_count }} إصدار</span></div>
+</a>
+{% endmacro %}
+
+{% macro empty(title, text) %}
+<div class="empty"><h3>{{ title }}</h3><p>{{ text }}</p></div>
+{% endmacro %}
+
+{% macro release_item(r) %}
+<a class="tl-item" href="{{ url_for('main.program_page', slug=r.slug) }}">
+  <span class="pico sm c{{ r.color }}">{{ r.letter }}</span>
+  <div class="body">
+    <div class="top"><b>{{ r.programName }}</b><span class="badge ver">v{{ r.version }}</span>
+      <span class="muted" style="font-size:12.5px">{{ r.releaseDate|fdate }}{% if r.size %} · {{ r.size|fsize }}{% endif %}</span></div>
+    {% if r.releaseNotes %}<div class="notes">{{ r.releaseNotes|truncate(160) }}</div>{% endif %}
+  </div>
+</a>
+{% endmacro %}
