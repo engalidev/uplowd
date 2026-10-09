@@ -1,6 +1,7 @@
 {% extends "user/base.html" %}
 {% from "user/parts.html" import program_card, release_item, empty %}
 {% block title %}{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">{% endblock %}
 {% block content %}
 
 <section class="hero">
@@ -46,7 +47,7 @@
 <section class="sec" id="map">
   <div class="head">
     <h2>العراق <span class="grad">بهويته وحضارته</span></h2>
-    <p>مرّر المؤشر فوق أي محافظة لاكتشاف رمزها التاريخي والحضاري.</p>
+    <p>مرّر المؤشر فوق أي محافظة لتشاهد معلمها يخرج من الأرض، وتتبّع مجرى دجلة والفرات.</p>
   </div>
   <div class="stage">
     <div id="iraqMap" data-geojson="{{ url_for('static', filename='data/iraq-adm1.geojson') }}"></div>
@@ -74,7 +75,9 @@
 {% endblock %}
 {% block scripts %}
 <script src="{{ url_for('static', filename='JS/iraq-map.js') }}"></script>
+<script src="{{ url_for('static', filename='JS/iraq-art.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/iraq-data.js') }}"></script>
+<script src="{{ url_for('static', filename='JS/iraq-rivers.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/home.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/hero.js') }}"></script>
 {% endblock %}
