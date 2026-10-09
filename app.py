@@ -30,7 +30,7 @@ app.config.update(
 )
 app.json.ensure_ascii = False
 
-SITE_NAME = os.environ.get("SITE_NAME", "Devspark")
+SITE_NAME = os.environ.get("SITE_NAME", "BETACODE")
 
 
 # ---------------------------------------------------------------- CSRF
