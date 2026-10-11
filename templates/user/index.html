@@ -1,83 +1,341 @@
+
 {% extends "user/base.html" %}
 {% from "user/parts.html" import program_card, release_item, empty %}
-{% block title %}{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">{% endblock %}
+
+{% block title %}
+{{ site_name or "BETACODE" }} — حلول برمجية ذكية لمستقبل أعمالك
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='css/map.css') }}">
+{% endblock %}
+
 {% block content %}
 
+<!-- ========================================= -->
+<!-- HERO -->
+<!-- ========================================= -->
+
 <section class="hero">
+
   <canvas id="bgNet" aria-hidden="true"></canvas>
+
   <div class="rev">
-    <span class="tag"><b></b> أنظمة حديثة · تحول رقمي</span>
-    <h1><span class="grad">BETACODE</span><small>حلول برمجية ذكية لمستقبل أعمالك</small></h1>
-    <p class="lead">نطوّر أنظمة وبرمجيات حديثة تساعد الشركات على الإدارة بكفاءة، وتسريع النمو، وتحقيق التحول الرقمي باحترافية.</p>
+
+    <span class="tag">
+      <b></b>
+      أنظمة حديثة · تحول رقمي
+    </span>
+
+    <h1>
+      <span class="grad">BETACODE</span>
+      <small>حلول برمجية ذكية لمستقبل أعمالك</small>
+    </h1>
+
+    <p class="lead">
+      نطوّر أنظمة وبرمجيات حديثة تساعد الشركات
+      على الإدارة بكفاءة، وتسريع النمو،
+      وتحقيق التحول الرقمي باحترافية.
+    </p>
+
     <div class="acts">
-      <a class="btn pri lg" href="{{ url_for('main.programs_page') }}">اكتشف خدماتنا ←</a>
-      <a class="btn lg" href="#map">خريطة العراق</a>
+
+      <a class="btn pri lg"
+         href="{{ url_for('main.programs_page') }}">
+        اكتشف خدماتنا ←
+      </a>
+
+      <a class="btn lg"
+         href="{{ url_for('license_public.request_license') }}">
+        🔐 طلب ترخيص
+      </a>
+
+      <a class="btn lg" href="#map">
+        خريطة العراق
+      </a>
+
     </div>
+
     <div class="hstats">
-      <div><b class="grad">{{ stats.programs if stats else 0 }}</b><span>برنامج متاح</span></div>
-      <div><b class="grad">{{ stats.releases if stats else 0 }}</b><span>إصدار منشور</span></div>
-      <div><b class="grad">SHA-256</b><span>تحقق من كل ملف</span></div>
+
+      <div>
+        <b class="grad">
+          {{ stats.programs if stats else 0 }}
+        </b>
+        <span>برنامج متاح</span>
+      </div>
+
+      <div>
+        <b class="grad">
+          {{ stats.releases if stats else 0 }}
+        </b>
+        <span>إصدار منشور</span>
+      </div>
+
+      <div>
+        <b class="grad">SHA-256</b>
+        <span>تحقق من كل ملف</span>
+      </div>
+
     </div>
+
   </div>
+
+  <!-- HERO VISUAL -->
 
   <div class="dash-box rev d2" aria-hidden="true">
-    <div class="fl a">✓ Deployed v2.4.0</div>
-    <div class="fl b">SHA-256 verified</div>
-    <div class="dash-wrap"><div class="dash">
-      <div class="dash-top"><i></i><i></i><i></i><span>betacode://erp/live</span></div>
-      <div class="kpis">
-        <div class="kpi"><small>Uptime</small><b data-count="99.98" data-dec="2" data-suf="%">0</b></div>
-        <div class="kpi"><small>Releases</small><b data-count="{{ stats.releases if stats else 24 }}">0</b></div>
-        <div class="kpi"><small>Users</small><b data-count="1280" data-sep="1">0</b></div>
+
+    <div class="fl a">
+      ✓ Deployed v2.4.0
+    </div>
+
+    <div class="fl b">
+      SHA-256 verified
+    </div>
+
+    <div class="dash-wrap">
+      <div class="dash">
+
+        <div class="dash-top">
+          <i></i><i></i><i></i>
+          <span>betacode://erp/live</span>
+        </div>
+
+        <div class="kpis">
+
+          <div class="kpi">
+            <small>Uptime</small>
+            <b data-count="99.98"
+               data-dec="2"
+               data-suf="%">0</b>
+          </div>
+
+          <div class="kpi">
+            <small>Releases</small>
+            <b data-count="{{ stats.releases if stats else 24 }}">0</b>
+          </div>
+
+          <div class="kpi">
+            <small>Users</small>
+            <b data-count="1280"
+               data-sep="1">0</b>
+          </div>
+
+        </div>
+
+        <div class="live">
+          <em>LIVE</em>
+
+          <svg viewBox="0 0 400 140"
+               preserveAspectRatio="none">
+
+            <defs>
+              <linearGradient id="lg"
+                              x1="0" y1="0"
+                              x2="0" y2="1">
+
+                <stop offset="0"
+                      stop-color="#22d3ee"
+                      stop-opacity=".4"/>
+
+                <stop offset="1"
+                      stop-color="#22d3ee"
+                      stop-opacity="0"/>
+
+              </linearGradient>
+            </defs>
+
+            <path class="gl"
+                  d="M0 35H400M0 70H400M0 105H400"/>
+
+            <g id="slide">
+              <path class="area" id="chA"/>
+              <path class="line" id="chL"/>
+            </g>
+
+          </svg>
+
+        </div>
+
+        <div class="bars" id="bars"></div>
+        <pre class="term" id="term"></pre>
+
       </div>
-      <div class="live"><em>LIVE</em>
-        <svg viewBox="0 0 400 140" preserveAspectRatio="none">
-          <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".4"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient></defs>
-          <path class="gl" d="M0 35H400M0 70H400M0 105H400"/>
-          <g id="slide"><path class="area" id="chA"/><path class="line" id="chL"/></g>
-        </svg>
-      </div>
-      <div class="bars" id="bars"></div>
-      <pre class="term" id="term"></pre>
-    </div></div>
+    </div>
+
   </div>
+
 </section>
+
+<!-- ========================================= -->
+<!-- IRAQ MAP -->
+<!-- ========================================= -->
 
 <section class="sec" id="map">
+
   <div class="head">
-    <h2>العراق <span class="grad">بهويته وحضارته</span></h2>
-    <p>مرّر المؤشر فوق أي محافظة لتشاهد معلمها يخرج من الأرض، وتتبّع مجرى دجلة والفرات.</p>
+
+    <h2>
+      العراق
+      <span class="grad">بهويته وحضارته</span>
+    </h2>
+
+    <p>
+      مرّر المؤشر فوق أي محافظة لتشاهد معلمها يخرج من الأرض،
+      وتتبّع مجرى دجلة والفرات.
+    </p>
+
   </div>
+
   <div class="stage">
-    <div id="iraqMap" data-geojson="{{ url_for('static', filename='data/iraq-adm1.geojson') }}"></div>
-    <aside class="gcard" id="govCard" aria-live="polite">
-      <div class="gico" id="govIcon"></div><h3 id="govName"></h3><div class="en" id="govEn"></div>
-      <span class="mark" id="govMark"></span><p id="govDesc"></p>
+
+    <div id="iraqMap"
+         data-geojson="{{ url_for('static', filename='data/iraq-adm1.geojson') }}">
+    </div>
+
+    <aside class="gcard"
+           id="govCard"
+           aria-live="polite">
+
+      <div class="gico" id="govIcon"></div>
+      <h3 id="govName"></h3>
+      <div class="en" id="govEn"></div>
+      <span class="mark" id="govMark"></span>
+      <p id="govDesc"></p>
+
     </aside>
+
   </div>
+
 </section>
 
-<div class="shead"><h2>البرامج</h2><a href="{{ url_for('main.programs_page') }}">عرض الكل ←</a></div>
-{% if programs %}<div class="pgrid">{% for p in programs %}{{ program_card(p) }}{% endfor %}</div>
-{% else %}{{ empty('لا توجد برامج بعد', 'ستظهر هنا البرامج بمجرد أن ينشرها المسؤول.') }}{% endif %}
+<!-- ========================================= -->
+<!-- PROGRAMS -->
+<!-- ========================================= -->
 
-{% if recent %}
-<div class="shead"><h2>آخر التحديثات</h2><a href="{{ url_for('main.updates') }}">السجل الكامل ←</a></div>
-<div class="tl">{% for r in recent %}{{ release_item(r) }}{% endfor %}</div>
+<div class="shead">
+  <h2>البرامج</h2>
+
+  <a href="{{ url_for('main.programs_page') }}">
+    عرض الكل ←
+  </a>
+</div>
+
+{% if programs %}
+
+  <div class="pgrid">
+
+    {% for p in programs %}
+      {{ program_card(p) }}
+    {% endfor %}
+
+  </div>
+
+{% else %}
+
+  {{ empty(
+      'لا توجد برامج بعد',
+      'ستظهر هنا البرامج بمجرد أن ينشرها المسؤول.'
+  ) }}
+
 {% endif %}
 
-<section class="band">
-  <h2>جاهزون لنقل أعمالك إلى المستوى التالي</h2>
-  <p>تصفّح برامجنا وحمّل أحدث الإصدارات مع التحقق من سلامة كل ملف.</p>
-  <div class="acts"><a class="btn pri lg" href="{{ url_for('main.programs_page') }}">ابدأ الآن</a></div>
+<!-- ========================================= -->
+<!-- LICENSING -->
+<!-- ========================================= -->
+
+<section class="band" id="licensing">
+
+  <h2>🔐 تفعيل برامج BETACODE</h2>
+
+  <p>
+    هل تحتاج إلى مفتاح ترخيص لبرنامج BETACODE ERP؟
+    قدّم طلبك باستخدام اسمك وبصمة جهازك،
+    ثم تابع حالة الطلب حتى تتم مراجعته من الإدارة.
+  </p>
+
+  <div class="acts">
+
+    <a class="btn pri lg"
+       href="{{ url_for('license_public.request_license') }}">
+      🔑 طلب ترخيص الآن
+    </a>
+
+  </div>
+
+  <p style="margin-top:16px;font-size:13px;opacity:.8">
+    لا يصدر المفتاح إلا بعد موافقة الإدارة،
+    ويكون متاحاً للنسخ من الموقع لمدة دقيقة واحدة
+    تبدأ من لحظة الموافقة.
+  </p>
+
 </section>
+
+<!-- ========================================= -->
+<!-- RECENT RELEASES -->
+<!-- ========================================= -->
+
+{% if recent %}
+
+  <div class="shead">
+
+    <h2>آخر التحديثات</h2>
+
+    <a href="{{ url_for('main.updates') }}">
+      السجل الكامل ←
+    </a>
+
+  </div>
+
+  <div class="tl">
+
+    {% for r in recent %}
+      {{ release_item(r) }}
+    {% endfor %}
+
+  </div>
+
+{% endif %}
+
+<!-- ========================================= -->
+<!-- BOTTOM CTA -->
+<!-- ========================================= -->
+
+<section class="band">
+
+  <h2>جاهزون لنقل أعمالك إلى المستوى التالي</h2>
+
+  <p>
+    تصفّح برامجنا وحمّل أحدث الإصدارات
+    مع التحقق من سلامة كل ملف.
+  </p>
+
+  <div class="acts">
+
+    <a class="btn pri lg"
+       href="{{ url_for('main.programs_page') }}">
+      ابدأ الآن
+    </a>
+
+    <a class="btn lg"
+       href="{{ url_for('license_public.request_license') }}">
+      طلب ترخيص
+    </a>
+
+  </div>
+
+</section>
+
 {% endblock %}
+
 {% block scripts %}
+
 <script src="{{ url_for('static', filename='JS/iraq-map.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/iraq-art.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/iraq-data.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/iraq-rivers.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/home.js') }}"></script>
 <script src="{{ url_for('static', filename='JS/hero.js') }}"></script>
+
 {% endblock %}
