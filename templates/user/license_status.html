@@ -1,27 +1,153 @@
 {% extends "user/base.html" %}
 {% block title %}متابعة طلب الترخيص — BETACODE{% endblock %}
-{% block head %}<meta name="referrer" content="no-referrer"><style>.lic-panel{max-width:750px;margin:36px auto;padding:28px;border-radius:16px;background:var(--card,#172439);color:var(--text,#e7eef9)}#licenseKey{width:100%;min-height:90px;box-sizing:border-box;direction:ltr;padding:12px;margin:10px 0;font:12px Consolas,monospace}.timer{font:700 44px Consolas,monospace;color:#f59e0b;direction:ltr;text-align:center}.lic-panel button{padding:11px 19px;border-radius:8px;cursor:pointer}.warn{color:#f59e0b}</style>{% endblock %}
+{% block head %}
+<meta name="referrer" content="no-referrer">
+<style>
+.lic-panel{max-width:750px;margin:36px auto;padding:28px;border-radius:16px;background:var(--card,#172439);color:var(--text,#e7eef9)}
+.lic-panel h1{line-height:1.5}#licenseKey{width:100%;min-height:90px;box-sizing:border-box;direction:ltr;padding:12px;margin:10px 0;font:12px Consolas,monospace;border:2px solid #64748b;border-radius:7px;background:#fff;color:#111827}
+.timer{font:700 44px Consolas,monospace;color:#f59e0b;direction:ltr;text-align:center;margin:8px 0}
+.lic-panel button{padding:11px 19px;border-radius:8px;cursor:pointer}.warn{color:#f59e0b}.lic-info{min-height:26px;margin:8px 0}
+</style>
+{% endblock %}
 {% block content %}
-<div class="lic-panel"><h1>🔑 متابعة ترخيص BETACODE ERP</h1><p>العميل: <b>{{ item.customer_name }}</b> — رقم الطلب: <b>{{ item.id }}</b></p>
-<p id="statusText" aria-live="polite">حالة الطلب: {{ 'قيد المراجعة' if item.status=='pending' else ('تمت الموافقة' if item.status=='approved' else 'مرفوض') }}</p>
-<div id="approved" hidden><p class="warn">يظهر المفتاح فقط خلال دقيقة تبدأ لحظة موافقة الأدمن، وليس لحظة فتح الصفحة.</p>
-<div class="timer" id="timer">--:--</div>
-<label for="licenseKey">مفتاح التفعيل:</label><textarea id="licenseKey" readonly spellcheck="false"></textarea>
-<button id="copyBtn" type="button">📋 نسخ المفتاح</button><p id="copyStatus" aria-live="polite"></p></div>
-<p id="reason" hidden></p><p>احتفظ برابط هذه الصفحة لمتابعة الطلب؛ لا تشاركه مع الآخرين.</p></div>
+<div class="lic-panel">
+  <h1>🔑 متابعة ترخيص BETACODE ERP</h1>
+  <p>العميل: <b>{{ item.customer_name }}</b> — رقم الطلب: <b>{{ item.id }}</b></p>
+  <p id="statusText" aria-live="polite">جاري التحقق من حالة الطلب...</p>
+  <p id="networkError" class="warn lic-info" role="status"></p>
+  <div id="approved" hidden>
+    <p class="warn">يظهر المفتاح لمدة دقيقة تبدأ من لحظة موافقة الأدمن، وليس من وقت فتح الصفحة.</p>
+    <div class="timer" id="timer" aria-live="off">--:--</div>
+    <label for="licenseKey">مفتاح التفعيل</label>
+    <textarea id="licenseKey" readonly spellcheck="false" aria-label="مفتاح التفعيل"></textarea>
+    <button id="copyBtn" type="button" disabled>📋 نسخ المفتاح</button>
+    <p id="copyStatus" aria-live="polite"></p>
+  </div>
+  <p id="reason" hidden></p>
+  <p>احتفظ برابط هذه الصفحة لمتابعة طلبك، ولا تشاركه مع الآخرين.</p>
+</div>
+{% endblock %}
+{% block scripts %}
 <script>
 (() => {
-const statusUrl={{ url_for('license_public.license_status_json',token=token)|tojson }};
-const revealUrl={{ url_for('license_public.reveal_license',token=token)|tojson }};
-const csrf={{ license_csrf|tojson }};
-let endAt=null, issued=false, closed=false;
-const $=id=>document.getElementById(id);
-function clear(){closed=true;issued=false;endAt=null;$('licenseKey').value='';$('approved').hidden=true;$('statusText').textContent='انتهت دقيقة عرض المفتاح. يلزم طلب جديد وموافقة جديدة.';}
-function renderTimer(){if(endAt===null||closed)return;const left=Math.max(0,Math.ceil((endAt-Date.now())/1000));$('timer').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(left<=0)clear();}
-async function reveal(){if(issued||closed)return;issued=true;try{const r=await fetch(revealUrl,{method:'POST',headers:{'X-License-CSRF':csrf},cache:'no-store',credentials:'same-origin'});const d=await r.json();if(!r.ok){if(r.status===410)clear();else{$('statusText').textContent=d.error||'تعذر إظهار المفتاح';issued=false;}return;}if(!closed&&endAt&&endAt>Date.now()){$('licenseKey').value=d.licenseKey;}}catch(e){issued=false;$('statusText').textContent='تعذر الاتصال بالخادم';}}
-async function poll(){if(closed)return;try{const r=await fetch(statusUrl,{cache:'no-store',credentials:'same-origin'});if(!r.ok)return;const d=await r.json();if(d.status==='approved'){if(d.secondsLeft<=0){clear();return;}if(endAt===null){endAt=Date.now()+d.secondsLeft*1000;$('approved').hidden=false;$('statusText').textContent='تمت الموافقة — انسخ المفتاح قبل انتهاء العداد';}else{endAt=Math.min(endAt,Date.now()+d.secondsLeft*1000);}renderTimer();await reveal();}else if(d.status==='rejected'){$('statusText').textContent='تم رفض الطلب';$('reason').hidden=false;$('reason').textContent=d.reason||'لم يذكر سبب';closed=true;}else{$('statusText').textContent='بانتظار موافقة الأدمن';}}catch(e){$('statusText').textContent='تعذر التحقق من الحالة مؤقتاً';}}
-$('copyBtn').onclick=async()=>{if(closed||!$('licenseKey').value)return;try{await navigator.clipboard.writeText($('licenseKey').value);$('copyStatus').textContent='تم النسخ. الصق المفتاح في البرنامج.';}catch(e){$('licenseKey').select();$('copyStatus').textContent='استخدم Ctrl+C لنسخ النص المحدد.';}};
-setInterval(renderTimer,250);setInterval(poll,3000);poll();
+  'use strict';
+  const statusUrl = {{ url_for('license_public.license_status_json', token=token)|tojson }};
+  const revealUrl = {{ url_for('license_public.reveal_license', token=token)|tojson }};
+  let csrf = {{ license_csrf|tojson }};
+  let endAt = null;
+  let revealDone = false;
+  let revealBusy = false;
+  let pollBusy = false;
+  let closed = false;
+  const el = id => document.getElementById(id);
+
+  function showError(message) { el('networkError').textContent = message || ''; }
+  async function readJson(response) {
+    const type = response.headers.get('content-type') || '';
+    if (!type.includes('application/json')) {
+      throw new Error('رد غير متوقع من الخادم (HTTP ' + response.status + ').');
+    }
+    return await response.json();
+  }
+  function expire() {
+    closed = true;
+    revealDone = false;
+    endAt = null;
+    el('licenseKey').value = '';
+    el('copyBtn').disabled = true;
+    el('approved').hidden = true;
+    el('statusText').textContent = 'انتهت دقيقة عرض المفتاح؛ يجب تقديم طلب جديد للحصول على موافقة جديدة.';
+    showError('');
+  }
+  function timerTick() {
+    if (closed || endAt === null) return;
+    const left = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+    el('timer').textContent = String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
+    if (left <= 0) expire();
+  }
+  async function refreshStatus() {
+    const response = await fetch(statusUrl, {cache:'no-store', credentials:'same-origin', headers:{'Accept':'application/json'}});
+    const data = await readJson(response);
+    if (!response.ok) throw new Error(data.error || 'تعذر الاستعلام عن حالة الطلب.');
+    if (typeof data.csrfToken === 'string' && data.csrfToken) csrf = data.csrfToken;
+    return data;
+  }
+  async function reveal(retry = true) {
+    if (revealBusy || revealDone || closed) return;
+    revealBusy = true;
+    try {
+      let response = await fetch(revealUrl, {
+        method:'POST', cache:'no-store', credentials:'same-origin',
+        headers:{'X-License-CSRF':csrf, 'Accept':'application/json'}
+      });
+      let data = await readJson(response);
+      if (response.status === 400 && data.code === 'csrf_expired' && retry && !closed) {
+        const status = await refreshStatus();
+        if (status.status !== 'approved' || status.secondsLeft <= 0) { expire(); return; }
+        response = await fetch(revealUrl, {
+          method:'POST', cache:'no-store', credentials:'same-origin',
+          headers:{'X-License-CSRF':csrf, 'Accept':'application/json'}
+        });
+        data = await readJson(response);
+      }
+      if (response.status === 410) { expire(); return; }
+      if (!response.ok) { showError(data.error || 'تعذر إظهار المفتاح (HTTP ' + response.status + ').'); return; }
+      if (typeof data.licenseKey !== 'string' || !data.licenseKey) throw new Error('لم يعُد الخادم مفتاحاً صالحاً.');
+      if (!closed && endAt !== null && endAt > Date.now()) {
+        el('licenseKey').value = data.licenseKey;
+        el('copyBtn').disabled = false;
+        revealDone = true;
+        showError('');
+      }
+    } catch (error) {
+      showError(error.message || 'تعذر الاتصال بالخادم.');
+    } finally {
+      revealBusy = false;
+    }
+  }
+  async function poll() {
+    if (pollBusy || closed) return;
+    pollBusy = true;
+    try {
+      const data = await refreshStatus();
+      if (data.status === 'approved') {
+        if (data.secondsLeft <= 0) { expire(); return; }
+        const serverEndEstimate = Date.now() + data.secondsLeft * 1000;
+        endAt = endAt === null ? serverEndEstimate : Math.min(endAt, serverEndEstimate);
+        el('approved').hidden = false;
+        el('statusText').textContent = 'تمت الموافقة — انسخ المفتاح قبل انتهاء العدّاد';
+        timerTick();
+        if (!closed && !revealDone) void reveal();
+      } else if (data.status === 'rejected') {
+        closed = true;
+        el('approved').hidden = true;
+        el('statusText').textContent = 'تم رفض الطلب';
+        el('reason').hidden = false;
+        el('reason').textContent = data.reason || 'لم يُذكر سبب الرفض';
+      } else {
+        el('statusText').textContent = 'بانتظار موافقة الإدارة';
+      }
+      showError('');
+    } catch (error) {
+      showError(error.message || 'تعذر التحقق من حالة الطلب مؤقتاً.');
+    } finally {
+      pollBusy = false;
+    }
+  }
+  el('copyBtn').addEventListener('click', async () => {
+    if (closed || !el('licenseKey').value) return;
+    try {
+      await navigator.clipboard.writeText(el('licenseKey').value);
+      el('copyStatus').textContent = 'تم النسخ. ألصق المفتاح في البرنامج.';
+    } catch (_) {
+      el('licenseKey').focus();
+      el('licenseKey').select();
+      el('copyStatus').textContent = 'اضغط Ctrl+C لنسخ النص المحدد.';
+    }
+  });
+  setInterval(timerTick, 250);
+  setInterval(() => { void poll(); }, 3000);
+  void poll();
 })();
 </script>
 {% endblock %}
