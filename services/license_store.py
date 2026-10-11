@@ -146,3 +146,17 @@ def status(token):
                               GREATEST(0, CEIL(EXTRACT(EPOCH FROM (visible_until - NOW()))))::int AS seconds_left
                        FROM betacode_license_requests WHERE access_hash=%s''', (_hash(token),))
         return cur.fetchone()
+def cleanup_expired_requests():
+    """
+    حذف طلبات التراخيص الموافق عليها
+    بعد انتهاء 60 ثانية من الموافقة.
+    """
+    with connection() as db, db.cursor() as cur:
+        cur.execute("""
+            DELETE FROM betacode_license_requests
+            WHERE status = 'approved'
+              AND visible_until <= NOW()
+        """)
+        deleted_count = cur.rowcount
+        db.commit()
+        return deleted_count
