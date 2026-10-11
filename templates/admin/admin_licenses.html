@@ -7,8 +7,8 @@
 <div class="tbl-wrap"><table><thead><tr><th>الرقم</th><th>العميل</th><th>بصمة الجهاز</th><th>الحالة</th><th>الطلب</th><th>الموافقة</th><th>الإجراء</th></tr></thead><tbody>
 {% for r in requests %}<tr><td>{{ r.id }}</td><td>{{ r.customer_name }}</td><td style="direction:ltr;max-width:230px;overflow-wrap:anywhere">{{ r.device_id }}</td><td>{{ 'قيد الانتظار' if r.status=='pending' else ('موافق عليه' if r.status=='approved' else 'مرفوض') }}</td><td>{{ r.requested_at }}</td><td>{{ r.decided_at or '—' }}</td>
 <td>{% if r.status=='pending' %}
-<form method="post" action="{{ url_for('license_admin.approve',request_id=r.id) }}" onsubmit="return confirm('تأكيد الموافقة؟ ستبدأ الدقيقة فوراً ولن يمكن إعادتها.')" style="display:inline"><input type="hidden" name="_license_csrf" value="{{ license_csrf }}"><button class="btn btn-primary" type="submit">✓ موافقة وتوليد</button></form>
-<form method="post" action="{{ url_for('license_admin.reject',request_id=r.id) }}" style="display:inline"><input type="hidden" name="_license_csrf" value="{{ license_csrf }}"><input name="reason" placeholder="سبب الرفض" maxlength="1000"><button class="btn" type="submit">رفض</button></form>
+<form method="post" action="{{ url_for('license_admin.approve',request_id=r.id) }}" onsubmit="return confirm('تأكيد الموافقة؟ ستبدأ الدقيقة فوراً ولن يمكن إعادتها.')" style="display:inline"><input type="hidden" name="_license_csrf" value="{{ license_csrf }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">✓ موافقة وتوليد</button></form>
+<form method="post" action="{{ url_for('license_admin.reject',request_id=r.id) }}" style="display:inline"><input type="hidden" name="_license_csrf" value="{{ license_csrf }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input name="reason" placeholder="سبب الرفض" maxlength="1000"><button class="btn" type="submit">رفض</button></form>
 {% else %}—{% endif %}</td></tr>{% else %}<tr><td colspan="7">لا توجد طلبات بعد</td></tr>{% endfor %}
 </tbody></table></div>
 {% endblock %}
