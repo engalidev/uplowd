@@ -1,18 +1,75 @@
+
 {% extends "shell.html" %}
 {% from "macros.html" import icon, nav_item %}
-{% block brand_href %}{{ url_for('admin.dashboard') }}{% endblock %}
-{% block brand_sub %}لوحة الإدارة{% endblock %}
-{% block nav %}
-  <div class="nav-label">الإدارة</div>
-  {{ nav_item('admin.dashboard', 'home', 'لوحة التحكم') }}
-  {{ nav_item('admin.programs', 'package', 'البرامج والإصدارات', ['admin.programs', 'admin.program_detail']) }}
-  <div class="nav-label">الموقع</div>
-  <a class="nav-link" href="{{ url_for('main.index') }}" target="_blank" rel="noopener">{{ icon('external') }}<span>عرض الموقع العام</span></a>
+
+{% block brand_href %}
+  {{ url_for('admin.dashboard') }}
 {% endblock %}
+
+{% block brand_sub %}
+  لوحة الإدارة
+{% endblock %}
+
+{% block nav %}
+
+  <div class="nav-label">الإدارة</div>
+
+  {{ nav_item(
+      'admin.dashboard',
+      'home',
+      'لوحة التحكم'
+  ) }}
+
+  {{ nav_item(
+      'admin.programs',
+      'package',
+      'البرامج والإصدارات',
+      ['admin.programs', 'admin.program_detail']
+  ) }}
+
+  {{ nav_item(
+      'license_admin.index',
+      'key',
+      'إدارة التراخيص'
+  ) }}
+
+  <div class="nav-label">الموقع</div>
+
+  <a class="nav-link"
+     href="{{ url_for('main.index') }}"
+     target="_blank"
+     rel="noopener">
+
+    {{ icon('external') }}
+    <span>عرض الموقع العام</span>
+
+  </a>
+
+{% endblock %}
+
+
 {% block sidebar_foot %}
-  <div class="who"><i>{{ icon('user') }}</i><span>{{ session.get('admin_username', '') }}</span></div>
-  <form method="post" action="{{ url_for('admin.logout') }}">
-    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-    <button type="submit" class="nav-link danger">{{ icon('logout') }}<span>تسجيل الخروج</span></button>
+
+  <div class="who">
+    <i>{{ icon('user') }}</i>
+    <span>{{ session.get('admin_username', '') }}</span>
+  </div>
+
+  <form method="post"
+        action="{{ url_for('admin.logout') }}">
+
+    <input type="hidden"
+           name="_csrf"
+           value="{{ csrf_token() }}">
+
+    <button type="submit"
+            class="nav-link danger">
+
+      {{ icon('logout') }}
+      <span>تسجيل الخروج</span>
+
+    </button>
+
   </form>
+
 {% endblock %}
