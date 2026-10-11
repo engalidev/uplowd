@@ -11,6 +11,7 @@ from routes.user.main import main as main_bp
 from routes.admin.license import license_admin
 from routes.user.license import license_public
 from services.license_store import initialize as initialize_license_db
+from services.license_store import cleanup_expired_requests
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -39,7 +40,11 @@ def csrf_token():
         session["_csrf"] = secrets.token_hex(24)
     return session["_csrf"]
 
-
+@app.before_request
+def cleanup_licenses():
+    if request.path.startswith(("/admin/licenses", "/licenses/")):
+        cleanup_expired_requests()
+        
 @app.before_request
 def csrf_protect():
     if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.path.startswith("/admin/"):
@@ -107,3 +112,4 @@ for _code, (_title, _msg) in ERRORS.items():
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", "5000")),
             debug=os.environ.get("FLASK_DEBUG") == "1")
+
