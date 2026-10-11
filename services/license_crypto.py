@@ -28,4 +28,3 @@ def generate_legacy_license(device_id: str, license_type: str, expiry: date) -> 
     encrypted = iv + enc.update(padded) + enc.finalize()
     signature = hmac.new(mac_secret.encode('utf-8'), encrypted, hashlib.sha256).digest()
     return base64.b64encode(encrypted).decode('ascii') + '.' + base64.b64encode(signature).decode('ascii')
- 
