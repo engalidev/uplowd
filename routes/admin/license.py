@@ -6,8 +6,6 @@ from flask import (Blueprint, abort, current_app, jsonify, redirect, render_temp
 from services import license_store as store
 from services.license_crypto import generate_legacy_license
 
-license_public = Blueprint('license_public', __name__)
-license_admin = Blueprint('license_admin', __name__, url_prefix='/admin/licenses')
 
 
 def no_cache(response):
@@ -39,51 +37,7 @@ def _admin_guard():
     return None
 
 
-@license_public.route('/licenses/request', methods=['GET', 'POST'])
-def request_license():
-    error = None
-    if request.method == 'POST':
-        _verify_csrf()
-        try:
-            _, token = store.submit(request.form.get('customer_name'), request.form.get('device_id'))
-            return redirect(url_for('license_public.license_status', token=token), code=303)
-        except ValueError as exc:
-            error = str(exc)
-    return no_cache(make_response(render_template('user/license_request.html', error=error,
-                                                  license_csrf=_csrf())))
-
-
-@license_public.route('/licenses/status/<token>')
-def license_status(token):
-    item = store.status(token)
-    if not item:
-        abort(404)
-    return no_cache(make_response(render_template('user/license_status.html', item=item,
-                                                  token=token, license_csrf=_csrf())))
-
-
-@license_public.route('/licenses/status/<token>/json')
-def license_status_json(token):
-    item = store.status(token)
-    if not item:
-        abort(404)
-    return no_cache(jsonify({'status': item['status'], 'secondsLeft': item['seconds_left'] or 0,
-                             'reason': item.get('reason') if item['status'] == 'rejected' else None}))
-
-
-@license_public.route('/licenses/status/<token>/reveal', methods=['POST'])
-def reveal_license(token):
-    _verify_csrf()
-    item = store.can_reveal(token)
-    if item is None:
-        return no_cache(jsonify({'error': 'انتهت مهلة عرض المفتاح أو لم تتم الموافقة'})), 410
-    try:
-        key = generate_legacy_license(item['device_id'], item['license_type'], item['license_expiry'])
-    except Exception:
-        current_app.logger.exception('License generator unavailable for approved request #%s', item['id'])
-        return no_cache(jsonify({'error': 'خدمة إصدار التراخيص غير جاهزة'})), 503
-    return no_cache(jsonify({'licenseKey': key}))
-
+license_admin = Blueprint('license_admin', __name__, url_prefix='/admin/licenses')
 
 @license_admin.route('', methods=['GET'])
 def index():
@@ -101,9 +55,13 @@ def approve(request_id):
         return guard
     _verify_csrf()
     try:
+        from services.license_crypto import generate_legacy_license
+        from datetime import date
+        # Validate signing configuration before irreversibly approving a request.
+        generate_legacy_license('CONFIGURATION-CHECK', 'PROFESSIONAL', date(2040, 12, 31))
         store.decide(request_id, 'approve', str(session['admin_username']))
         flash('تمت الموافقة. بدأت مهلة عرض المفتاح لمدة 60 ثانية.', 'success')
-    except ValueError as exc:
+    except (ValueError, RuntimeError) as exc:
         flash(str(exc), 'error')
     return redirect(url_for('license_admin.index'), code=303)
 
@@ -120,4 +78,3 @@ def reject(request_id):
     except ValueError as exc:
         flash(str(exc), 'error')
     return redirect(url_for('license_admin.index'), code=303)
- 
