@@ -1,41 +1,230 @@
+
 {% extends "admin/admin_base.html" %}
 {% from "macros.html" import icon, program_card, empty %}
-{% block title %}لوحة التحكم — {{ site_name }}{% endblock %}
-{% block topbar_title %}لوحة التحكم{% endblock %}
+
+{% block title %}
+لوحة التحكم — {{ site_name }}
+{% endblock %}
+
+{% block topbar_title %}
+لوحة التحكم
+{% endblock %}
+
 {% block content %}
+
 <div class="page-head">
-  <div><h1>لوحة التحكم</h1><p>نظرة سريعة على البرامج والإصدارات المنشورة.</p></div>
-  <a class="btn btn-primary" href="{{ url_for('admin.programs') }}">{{ icon('plus') }} إضافة برنامج</a>
+
+  <div>
+    <h1>لوحة التحكم</h1>
+    <p>
+      إدارة برامج BETACODE والإصدارات والتراخيص
+      من مكان واحد.
+    </p>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+
+    <a class="btn btn-primary"
+       href="{{ url_for('admin.programs') }}">
+      {{ icon('plus') }}
+      إضافة برنامج
+    </a>
+
+    <a class="btn btn-primary"
+       href="{{ url_for('license_admin.index') }}">
+      {{ icon('key') }}
+      إدارة التراخيص
+    </a>
+
+  </div>
+
 </div>
+
+
+<!-- ==========================================
+     إحصائيات البرامج والإصدارات
+========================================== -->
 
 <div class="stats">
-  <div class="card stat"><div class="stat-ico">{{ icon('grid') }}</div><div><b>{{ stats.programs }}</b><span>برنامج</span></div></div>
-  <div class="card stat"><div class="stat-ico">{{ icon('layers') }}</div><div><b>{{ stats.releases }}</b><span>إصدار منشور</span></div></div>
-  <div class="card stat"><div class="stat-ico">{{ icon('database') }}</div><div><b>{{ stats.size|fsize }}</b><span>مساحة الملفات</span></div></div>
+
+  <div class="card stat">
+    <div class="stat-ico">
+      {{ icon('grid') }}
+    </div>
+    <div>
+      <b>{{ stats.programs }}</b>
+      <span>برنامج</span>
+    </div>
+  </div>
+
+  <div class="card stat">
+    <div class="stat-ico">
+      {{ icon('layers') }}
+    </div>
+    <div>
+      <b>{{ stats.releases }}</b>
+      <span>إصدار منشور</span>
+    </div>
+  </div>
+
+  <div class="card stat">
+    <div class="stat-ico">
+      {{ icon('database') }}
+    </div>
+    <div>
+      <b>{{ stats.size|fsize }}</b>
+      <span>مساحة الملفات</span>
+    </div>
+  </div>
+
 </div>
 
-<div class="section-head"><h2>البرامج</h2><a href="{{ url_for('admin.programs') }}">إدارة الكل</a></div>
+
+<!-- ==========================================
+     إدارة التراخيص
+========================================== -->
+
+<div class="section-head">
+  <h2>إدارة التراخيص</h2>
+
+  <a href="{{ url_for('license_admin.index') }}">
+    عرض طلبات التراخيص
+  </a>
+</div>
+
+<div class="card" style="margin-bottom:24px">
+
+  <h3>🔐 تراخيص BETACODE</h3>
+
+  <p class="sub">
+    راجع طلبات العملاء وبصمات أجهزتهم،
+    ووافق على إصدار مفاتيح التفعيل أو ارفض الطلبات.
+  </p>
+
+  <p class="sub">
+    يبدأ وقت عرض مفتاح التفعيل من لحظة موافقة
+    الإدارة، ويظل متاحاً للنسخ لمدة 60 ثانية فقط.
+  </p>
+
+  <a class="btn btn-primary"
+     href="{{ url_for('license_admin.index') }}">
+    {{ icon('key') }}
+    فتح إدارة التراخيص
+  </a>
+
+</div>
+
+
+<!-- ==========================================
+     البرامج
+========================================== -->
+
+<div class="section-head">
+
+  <h2>البرامج</h2>
+
+  <a href="{{ url_for('admin.programs') }}">
+    إدارة الكل
+  </a>
+
+</div>
+
 {% if programs %}
-  <div class="pgrid">{% for p in programs %}{{ program_card(p, url_for('admin.program_detail', slug=p.slug)) }}{% endfor %}</div>
+
+  <div class="pgrid">
+
+    {% for p in programs %}
+
+      {{ program_card(
+          p,
+          url_for('admin.program_detail', slug=p.slug)
+      ) }}
+
+    {% endfor %}
+
+  </div>
+
 {% else %}
-  {% call empty('package', 'لا توجد برامج بعد', 'أنشئ أول برنامج ثم ارفع له إصدارًا.') %}
-    <a class="btn btn-primary" href="{{ url_for('admin.programs') }}">{{ icon('plus') }} إضافة برنامج</a>
+
+  {% call empty(
+      'package',
+      'لا توجد برامج بعد',
+      'أنشئ أول برنامج ثم ارفع له إصدارًا.'
+  ) %}
+
+    <a class="btn btn-primary"
+       href="{{ url_for('admin.programs') }}">
+      {{ icon('plus') }}
+      إضافة برنامج
+    </a>
+
   {% endcall %}
+
 {% endif %}
 
+
+<!-- ==========================================
+     آخر الإصدارات
+========================================== -->
+
 {% if recent %}
-<div class="section-head"><h2>آخر الإصدارات</h2></div>
-<div class="tbl-wrap"><table>
-  <thead><tr><th>البرنامج</th><th>الإصدار</th><th>الحجم</th><th>التاريخ</th></tr></thead>
-  <tbody>
-  {% for r in recent %}
-    <tr>
-      <td><a href="{{ url_for('admin.program_detail', slug=r.slug) }}"><b>{{ r.programName }}</b></a></td>
-      <td><span class="badge badge-ver">v{{ r.version }}</span></td>
-      <td>{{ r.size|fsize }}</td><td>{{ r.releaseDate|fdate }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table></div>
+
+<div class="section-head">
+  <h2>آخر الإصدارات</h2>
+</div>
+
+<div class="tbl-wrap">
+
+  <table>
+
+    <thead>
+      <tr>
+        <th>البرنامج</th>
+        <th>الإصدار</th>
+        <th>الحجم</th>
+        <th>التاريخ</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      {% for r in recent %}
+
+      <tr>
+
+        <td>
+          <a href="{{ url_for(
+              'admin.program_detail',
+              slug=r.slug
+          ) }}">
+            <b>{{ r.programName }}</b>
+          </a>
+        </td>
+
+        <td>
+          <span class="badge badge-ver">
+            v{{ r.version }}
+          </span>
+        </td>
+
+        <td>
+          {{ r.size|fsize }}
+        </td>
+
+        <td>
+          {{ r.releaseDate|fdate }}
+        </td>
+
+      </tr>
+
+      {% endfor %}
+
+    </tbody>
+
+  </table>
+
+</div>
+
 {% endif %}
+
 {% endblock %}
