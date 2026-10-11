@@ -148,15 +148,37 @@ def status(token):
         return cur.fetchone()
 def cleanup_expired_requests():
     """
-    حذف طلبات التراخيص الموافق عليها
-    بعد انتهاء 60 ثانية من الموافقة.
+    حذف الطلبات الموافق عليها والمنتهية نهائياً،
+    مع حذف سجلات التدقيق المرتبطة بها.
+
+    يعتمد على ساعة PostgreSQL.
     """
+
     with connection() as db, db.cursor() as cur:
+
         cur.execute("""
+            WITH expired AS (
+                SELECT id
+                FROM betacode_license_requests
+                WHERE status = 'approved'
+                  AND visible_until <= NOW()
+            ),
+            deleted_audit AS (
+                DELETE FROM betacode_license_audit
+                WHERE request_id IN (
+                    SELECT id FROM expired
+                )
+                RETURNING id
+            )
             DELETE FROM betacode_license_requests
-            WHERE status = 'approved'
-              AND visible_until <= NOW()
+            WHERE id IN (
+                SELECT id FROM expired
+            )
+            RETURNING id
         """)
+
         deleted_count = cur.rowcount
+
+        return deleted_count
         db.commit()
         return deleted_count
