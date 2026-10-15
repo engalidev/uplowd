@@ -1,15 +1,18 @@
+"""Program management; immutable public programKey and legacy slug support."""
 from flask import abort, flash, redirect, render_template, request, url_for
 
 from routes.admin import admin, ajax_redirect, login_required
 from services import storage as st
 from services.storage import StorageError
 
-CATEGORIES = ["إدارة مبيعات", "تعليم ومدارس", "صيدليات", "محاسبة", "مخازن", "مطاعم", "موارد بشرية", "أخرى"]
+CATEGORIES = ["إدارة مبيعات", "تعليم ومدارس", "صيدليات", "محاسبة", "مخازن",
+              "مطاعم", "موارد بشرية", "أخرى"]
 
 
 def _fields():
     f = request.form
-    return (f.get("name", ""), f.get("description", ""), f.get("category", ""), f.get("icon", ""))
+    return (f.get("name", ""), f.get("description", ""),
+            f.get("category", ""), f.get("icon", ""))
 
 
 @admin.route("/programs")
@@ -24,11 +27,13 @@ def programs():
 def program_create():
     name, description, category, icon = _fields()
     try:
-        slug = st.create_program(name, request.form.get("slug", ""), description, category, icon)
+        slug = st.create_program(
+            name, request.form.get("slug", ""), description, category, icon,
+            program_key=request.form.get("program_key", ""))
     except StorageError as ex:
         flash(str(ex), "error")
         return redirect(url_for("admin.programs"))
-    flash("تم إنشاء البرنامج. ارفع أول إصدار له الآن.", "success")
+    flash("تم إنشاء البرنامج بهوية تحديث ثابتة. ارفع أول إصدار له الآن.", "success")
     return redirect(url_for("admin.program_detail", slug=slug))
 
 
@@ -45,10 +50,14 @@ def program_detail(slug):
 @admin.route("/programs/<slug>/edit", methods=["POST"])
 @login_required
 def program_edit(slug):
+    program = st.get_program(slug)
+    if not program:
+        abort(404)
     name, description, category, icon = _fields()
     try:
-        st.update_program(slug, name, description, category, icon)
-        flash("تم حفظ بيانات البرنامج.", "success")
+        st.update_program(slug, name, description, category, icon,
+                          program_key=request.form.get("program_key", ""))
+        flash("تم حفظ بيانات البرنامج دون تغيير هوية التحديث الثابتة.", "success")
     except StorageError as ex:
         flash(str(ex), "error")
     return redirect(url_for("admin.program_detail", slug=slug))
@@ -63,8 +72,11 @@ def program_delete(slug):
     if request.form.get("confirm", "").strip().lower() != program["slug"].lower():
         flash("لم يتم الحذف: المعرّف المكتوب غير مطابق.", "error")
         return redirect(url_for("admin.program_detail", slug=slug))
-    st.delete_program(slug)
-    flash(f"تم حذف البرنامج «{program['name']}» وجميع إصداراته.", "success")
+    try:
+        st.delete_program(slug)
+        flash(f"تم حذف البرنامج «{program['name']}» وجميع إصداراته.", "success")
+    except StorageError as ex:
+        flash(str(ex), "error")
     return redirect(url_for("admin.programs"))
 
 
@@ -77,18 +89,15 @@ def release_publish(slug):
     f = request.form
     try:
         rec = st.publish_release(
-            program["slug"],
-            request.files.get("update_file"),
-            f.get("version", ""),
-            f.get("minimum_version", ""),
+            program["slug"], request.files.get("update_file"),
+            f.get("version", ""), f.get("minimum_version", ""),
             f.get("release_notes", ""),
             f.get("requires_restart") == "on",
-            f.get("requires_database_migration") == "on",
-        )
+            f.get("requires_database_migration") == "on")
         flash(f"تم نشر «{program['name']}» بالإصدار {rec['version']}.", "success")
     except StorageError as ex:
         flash(str(ex), "error")
-    except Exception as ex:  # noqa: BLE001
+    except Exception as ex:
         print("[PUBLISH] unexpected error:", repr(ex), flush=True)
         flash("حدث خطأ غير متوقع أثناء النشر. راجع سجلات الخادم.", "error")
     return ajax_redirect(url_for("admin.program_detail", slug=program["slug"]))
@@ -97,6 +106,9 @@ def release_publish(slug):
 @admin.route("/programs/<slug>/releases/<version>/delete", methods=["POST"])
 @login_required
 def release_delete(slug, version):
+    program = st.get_program(slug)
+    if not program:
+        abort(404)
     try:
         st.delete_release(slug, version)
         flash(f"تم حذف الإصدار {version}.", "success")
